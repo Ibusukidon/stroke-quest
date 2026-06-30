@@ -12,7 +12,7 @@
     <div>
       <p class="eyebrow">stroke-quest</p>
       <h1>脳卒中専門医試験ドリル</h1>
-      <p class="subtitle">第1章：脳の解剖と機能｜問題データ分離版</p>
+      <p class="subtitle" id="subtitle">章を選んで学習開始</p>
     </div>
     <div class="stats">
       <div><span id="totalCount">-</span><small>総問題</small></div>
@@ -23,37 +23,48 @@
     </div>
   </header>
 
-  <section class="toolbar">
-    <button id="modeAll" class="active">順番に解く</button>
-    <button id="modeWrong">間違い集</button>
-    <button id="modeFlag">要復習</button>
-    <button id="modeRandom">ランダム10問</button>
-    <input id="jumpBox" type="number" min="1" placeholder="番号">
-    <button id="jumpBtn" class="ghost">ジャンプ</button>
-    <button id="resetBtn" class="ghost">記録リセット</button>
+  <section id="homeView">
+    <div class="hero">
+      <h2>カリキュラムから章を選択</h2>
+      <p>まずは第1章から。第2章以降はこの土台に問題データを追加して拡張します。</p>
+    </div>
+    <div id="chapterGrid" class="chapter-grid"></div>
   </section>
 
-  <section class="card">
-    <div class="qtop">
-      <div class="badges">
-        <span class="badge">第1章</span>
-        <span class="badge gray" id="qidBadge"></span>
+  <section id="quizView" class="hidden">
+    <section class="toolbar">
+      <button id="backHome" class="ghost">章選択へ戻る</button>
+      <button id="modeAll" class="active">順番に解く</button>
+      <button id="modeWrong">間違い集</button>
+      <button id="modeFlag">要復習</button>
+      <button id="modeRandom">ランダム10問</button>
+      <input id="jumpBox" type="number" min="1" placeholder="番号">
+      <button id="jumpBtn" class="ghost">ジャンプ</button>
+      <button id="resetBtn" class="ghost">この章の記録リセット</button>
+    </section>
+
+    <section class="card">
+      <div class="qtop">
+        <div class="badges">
+          <span class="badge" id="chapterBadge">章</span>
+          <span class="badge gray" id="qidBadge"></span>
+        </div>
+        <span id="progressText"></span>
       </div>
-      <span id="progressText"></span>
-    </div>
-    <h2 id="questionText">読み込み中...</h2>
-    <div id="choices" class="choices"></div>
-    <div class="actions">
-      <button id="submitBtn">回答する</button>
-      <button id="nextBtn" class="secondary" disabled>次へ</button>
-      <button id="flagBtn" class="warn">要復習に入れる</button>
-    </div>
-    <div id="resultBox" class="result hidden"></div>
+      <h2 id="questionText">読み込み中...</h2>
+      <div id="choices" class="choices"></div>
+      <div class="actions">
+        <button id="submitBtn">回答する</button>
+        <button id="nextBtn" class="secondary" disabled>次へ</button>
+        <button id="flagBtn" class="warn">要復習に入れる</button>
+      </div>
+      <div id="resultBox" class="result hidden"></div>
+    </section>
   </section>
 
   <section class="memo">
-    <h3>更新内容 v2</h3>
-    <p>問題データを <code>questions/chapter1.json</code> に分離しました。今後は問題を追加するとき、JSONだけ差し替えればOKです。</p>
+    <h3>更新内容 v3</h3>
+    <p>トップ画面に章選択を追加。今後は <code>chapters.json</code> と <code>questions/chapterX.json</code> を追加すれば章を増やせます。</p>
   </section>
 </main>
 
