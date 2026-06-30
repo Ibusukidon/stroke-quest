@@ -51,6 +51,24 @@ const els = {
   jumpBox: document.getElementById("jumpBox"),
   jumpBtn: document.getElementById("jumpBtn"),
   backHome: document.getElementById("backHome"),
+  sideBackHome: document.getElementById("sideBackHome"),
+  sideChapterTitle: document.getElementById("sideChapterTitle"),
+  sideProgressText: document.getElementById("sideProgressText"),
+  sideProgressBar: document.getElementById("sideProgressBar"),
+  sideS: document.getElementById("sideS"),
+  sideA: document.getElementById("sideA"),
+  sideB: document.getElementById("sideB"),
+  sideC: document.getElementById("sideC"),
+  sideD: document.getElementById("sideD"),
+  sideModeAll: document.getElementById("sideModeAll"),
+  sideModeRandom: document.getElementById("sideModeRandom"),
+  sideModeDue: document.getElementById("sideModeDue"),
+  sideModeWrong: document.getElementById("sideModeWrong"),
+  sideModeFlag: document.getElementById("sideModeFlag"),
+  sideModeWeak: document.getElementById("sideModeWeak"),
+  sideModeD: document.getElementById("sideModeD"),
+  sideJumpBox: document.getElementById("sideJumpBox"),
+  sideJumpBtn: document.getElementById("sideJumpBtn"),
   searchInput: document.getElementById("searchInput"),
   searchBtn: document.getElementById("searchBtn"),
   clearSearchBtn: document.getElementById("clearSearchBtn"),
@@ -297,8 +315,45 @@ function setMode(nextMode) {
   render();
 }
 
+
+function updateStudySidebar() {
+  if (!currentChapter || !QUESTIONS.length || !els.sideChapterTitle) return;
+  const records = Object.values(state.answered || {});
+  const done = records.length;
+  const total = QUESTIONS.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  els.sideChapterTitle.textContent = currentChapter.title;
+  els.sideProgressText.textContent = `${done}/${total}`;
+  els.sideProgressBar.style.width = `${pct}%`;
+
+  const counts = {S:0,A:0,B:0,C:0,D:0};
+  Object.values(state.mastery || {}).forEach(rec => {
+    const r = rec.rank || "D";
+    if (counts[r] !== undefined) counts[r]++;
+  });
+  els.sideS.textContent = counts.S;
+  els.sideA.textContent = counts.A;
+  els.sideB.textContent = counts.B;
+  els.sideC.textContent = counts.C;
+  els.sideD.textContent = counts.D;
+
+  document.querySelectorAll(".side-actions button").forEach(b => b.classList.remove("active"));
+  const map = {
+    all: els.sideModeAll,
+    random: els.sideModeRandom,
+    due: els.sideModeDue,
+    wrong: els.sideModeWrong,
+    flag: els.sideModeFlag,
+    weak: els.sideModeWeak,
+    masteryD: els.sideModeD
+  };
+  if (map[mode]) map[mode].classList.add("active");
+}
+
 function render() {
   updateStats();
+  updateStudySidebar();
   els.resultBox.className = "result hidden";
   els.resultBox.innerHTML = "";
   els.nextBtn.disabled = true;
@@ -746,6 +801,25 @@ els.editorBackHome.addEventListener("click", renderHome);
 els.addQuestionBtn.addEventListener("click", addQuestionFromEditor);
 els.downloadJsonBtn.addEventListener("click", downloadChapterJson);
 els.clearEditorBtn.addEventListener("click", clearEditor);
+
+
+if (els.sideBackHome) els.sideBackHome.addEventListener("click", renderHome);
+if (els.sideModeAll) els.sideModeAll.addEventListener("click", () => setMode("all"));
+if (els.sideModeRandom) els.sideModeRandom.addEventListener("click", () => setMode("random"));
+if (els.sideModeDue) els.sideModeDue.addEventListener("click", () => setMode("due"));
+if (els.sideModeWrong) els.sideModeWrong.addEventListener("click", () => setMode("wrong"));
+if (els.sideModeFlag) els.sideModeFlag.addEventListener("click", () => setMode("flag"));
+if (els.sideModeWeak) els.sideModeWeak.addEventListener("click", () => setMode("weak"));
+if (els.sideModeD) els.sideModeD.addEventListener("click", () => setMode("masteryD"));
+if (els.sideJumpBtn) els.sideJumpBtn.addEventListener("click", () => {
+  const n = Number(els.sideJumpBox.value);
+  if (!n || n < 1 || n > QUESTIONS.length) return;
+  mode = "all";
+  order = QUESTIONS.map((_, i) => i);
+  pos = n - 1;
+  setActiveButton();
+  render();
+});
 
 loadChapters().catch(e => {
   els.chapterGrid.innerHTML = `<div class="chapter-card disabled"><h3>読み込み失敗</h3><p>${e.message}</p></div>`;

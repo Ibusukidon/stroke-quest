@@ -82,6 +82,53 @@
   </section>
 
   <section id="quizView" class="hidden">
+    <div class="study-layout">
+      <aside class="study-sidebar">
+        <button id="sideBackHome" class="side-back">← 章選択へ戻る</button>
+
+        <section class="side-card">
+          <p class="side-label">現在の章</p>
+          <h2 id="sideChapterTitle">第1章</h2>
+          <div class="side-progress">
+            <div class="side-progress-top"><span>進捗</span><strong id="sideProgressText">0/0</strong></div>
+            <div class="progress-bar"><div id="sideProgressBar"></div></div>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <p class="side-label">習熟度</p>
+          <div class="side-ranks">
+            <span class="rank-dot rank-s">S <b id="sideS">0</b></span>
+            <span class="rank-dot rank-a">A <b id="sideA">0</b></span>
+            <span class="rank-dot rank-b">B <b id="sideB">0</b></span>
+            <span class="rank-dot rank-c">C <b id="sideC">0</b></span>
+            <span class="rank-dot rank-d">D <b id="sideD">0</b></span>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <p class="side-label">学習モード</p>
+          <div class="side-actions">
+            <button id="sideModeAll">順番</button>
+            <button id="sideModeRandom">ランダム10問</button>
+            <button id="sideModeDue">今日の復習</button>
+            <button id="sideModeWrong">間違い集</button>
+            <button id="sideModeFlag">要復習</button>
+            <button id="sideModeWeak">C/Dだけ</button>
+            <button id="sideModeD">Dだけ</button>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <p class="side-label">ジャンプ</p>
+          <div class="side-jump">
+            <input id="sideJumpBox" type="number" min="1" placeholder="番号">
+            <button id="sideJumpBtn">移動</button>
+          </div>
+        </section>
+      </aside>
+
+      <div class="study-main">
     <section class="toolbar">
       <button id="backHome" class="ghost">章選択へ戻る</button>
       <button id="modeAll" class="active">順番に解く</button>
@@ -115,6 +162,8 @@
       </div>
       <div id="resultBox" class="result hidden"></div>
     </section>
+      </div>
+    </div>
   </section>
 
   <section id="editorView" class="hidden">
@@ -172,8 +221,8 @@
   </section>
 
   <section class="memo">
-    <h3>更新内容 v9.1</h3>
-    <p>PC版の選択肢レイアウトを再修正。ラジオボタン、A〜E、選択肢本文を左寄せ固定にしました。</p>
+    <h3>更新内容 v10</h3>
+    <p>PC版を左右2カラム化。左に学習状況とモード、右に問題を配置しました。スマホでは従来通り縦表示です。</p>
   </section>
 </main>
 
