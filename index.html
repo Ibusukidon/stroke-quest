@@ -39,6 +39,22 @@
       <button id="openEditorBtn">問題追加エディタ</button>
     </div>
 
+    <section class="search-panel">
+      <div class="search-head">
+        <div>
+          <h2>検索・タグ周回</h2>
+          <p>問題文・選択肢・解説・タグを検索。タグを押すと、そのタグだけの問題を徹底的に回せます。</p>
+        </div>
+      </div>
+      <div class="search-row">
+        <input id="searchInput" type="search" placeholder="例：Broca、脳幹、MCA、視覚路">
+        <button id="searchBtn">検索</button>
+        <button id="clearSearchBtn" class="ghost">クリア</button>
+      </div>
+      <div id="tagCloud" class="tag-cloud"></div>
+      <div id="searchResults" class="search-results"></div>
+    </section>
+
     <div class="hero">
       <h2>カリキュラムから章を選択</h2>
       <p>章ごとの進捗・正答率・間違い数を見ながら潰していきます。</p>
@@ -53,6 +69,7 @@
       <button id="modeWrong">間違い集</button>
       <button id="modeFlag">要復習</button>
       <button id="modeRandom">ランダム10問</button>
+      <button id="modeTag" class="hidden">タグ周回</button>
       <input id="jumpBox" type="number" min="1" placeholder="番号">
       <button id="jumpBtn" class="ghost">ジャンプ</button>
       <button id="resetBtn" class="ghost">この章の記録リセット</button>
@@ -104,6 +121,9 @@
           <label>D</label><input id="choice3" type="text">
           <label>E</label><input id="choice4" type="text">
         </div>
+
+        <label>タグ（カンマ区切り）</label>
+        <input id="editorTags" type="text" placeholder="例：失語, MCA, 頻出">
 
         <label>正解</label>
         <select id="editorAnswer">

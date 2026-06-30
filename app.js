@@ -6,6 +6,7 @@ let order = [];
 let pos = 0;
 let selected = null;
 let answered = false;
+let activeTag = null;
 
 const els = {
   subtitle: document.getElementById("subtitle"),
@@ -39,6 +40,12 @@ const els = {
   jumpBox: document.getElementById("jumpBox"),
   jumpBtn: document.getElementById("jumpBtn"),
   backHome: document.getElementById("backHome"),
+  searchInput: document.getElementById("searchInput"),
+  searchBtn: document.getElementById("searchBtn"),
+  clearSearchBtn: document.getElementById("clearSearchBtn"),
+  tagCloud: document.getElementById("tagCloud"),
+  searchResults: document.getElementById("searchResults"),
+  modeTag: document.getElementById("modeTag"),
   editorView: document.getElementById("editorView"),
   openEditorBtn: document.getElementById("openEditorBtn"),
   editorBackHome: document.getElementById("editorBackHome"),
@@ -48,6 +55,7 @@ const els = {
   editorQuestion: document.getElementById("editorQuestion"),
   editorExplanation: document.getElementById("editorExplanation"),
   editorAnswer: document.getElementById("editorAnswer"),
+  editorTags: document.getElementById("editorTags"),
   editorMessage: document.getElementById("editorMessage"),
   editorCountBadge: document.getElementById("editorCountBadge"),
   jsonPreview: document.getElementById("jsonPreview"),
@@ -152,6 +160,7 @@ function renderHome() {
   els.totalCount.textContent = "-";
   updateStatsForHome();
   renderDashboard();
+  loadSearchIndex();
   els.chapterGrid.innerHTML = "";
 
   CHAPTERS.forEach(ch => {
@@ -230,6 +239,7 @@ function setActiveButton() {
   if (mode === "wrong") els.modeWrong.classList.add("active");
   if (mode === "flag") els.modeFlag.classList.add("active");
   if (mode === "random") els.modeRandom.classList.add("active");
+  if (mode === "tag") els.modeTag.classList.add("active");
 }
 
 function setMode(nextMode) {
@@ -241,6 +251,7 @@ function setMode(nextMode) {
   if (mode === "all") order = QUESTIONS.map((_, i) => i);
   else if (mode === "wrong") order = QUESTIONS.map((q, i) => (state.wrongIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
   else if (mode === "flag") order = QUESTIONS.map((q, i) => (state.flagIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
+  else if (mode === "tag" && activeTag) order = QUESTIONS.map((q, i) => (q.tags || []).includes(activeTag) ? i : -1).filter(i => i >= 0);
   else order = QUESTIONS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 10);
 
   setActiveButton();
@@ -279,7 +290,7 @@ function render() {
   const q = QUESTIONS[order[pos]];
   els.progressText.textContent = `${pos + 1} / ${order.length}`;
   els.qidBadge.textContent = q.id.replace("ch1-", "No.");
-  els.questionText.textContent = q.question;
+  els.questionText.textContent = q.question + ((q.tags && q.tags.length) ? "\n" : "");
   els.flagBtn.textContent = (state.flagIds || []).includes(q.id) ? "要復習から外す" : "要復習に入れる";
   els.choices.innerHTML = "";
 
@@ -339,6 +350,110 @@ function toggleFlag() {
   render();
 }
 
+
+let searchIndex = [];
+
+async function loadSearchIndex() {
+  try {
+    const ch = CHAPTERS.find(c => c.id === "chapter1");
+    if (!ch) return;
+    const res = await fetch(ch.file, { cache: "no-store" });
+    const qs = await res.json();
+    searchIndex = qs.map((q, i) => ({...q, chapterId: ch.id, chapterTitle: ch.title, index: i}));
+    renderTagCloud();
+  } catch (e) {
+    // 検索は補助機能なので失敗しても本体は止めない
+  }
+}
+
+function allTags() {
+  const counts = {};
+  searchIndex.forEach(q => (q.tags || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
+  return Object.entries(counts).sort((a,b) => b[1] - a[1]);
+}
+
+function renderTagCloud() {
+  if (!els.tagCloud) return;
+  const tags = allTags();
+  els.tagCloud.innerHTML = tags.map(([tag, count]) =>
+    `<button class="tag-button ${activeTag === tag ? "active-tag" : ""}" data-tag="${tag}">#${tag} ${count}</button>`
+  ).join("");
+  els.tagCloud.querySelectorAll(".tag-button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeTag = btn.dataset.tag;
+      renderTagCloud();
+      renderSearchResults(searchIndex.filter(q => (q.tags || []).includes(activeTag)), `#${activeTag}`);
+    });
+  });
+}
+
+function searchTextOf(q) {
+  return [
+    q.id,
+    q.question,
+    ...(q.choices || []),
+    q.explanation,
+    ...(q.tags || [])
+  ].join(" ").toLowerCase();
+}
+
+function doSearch() {
+  const query = (els.searchInput.value || "").trim().toLowerCase();
+  activeTag = null;
+  renderTagCloud();
+  if (!query) {
+    els.searchResults.innerHTML = "";
+    return;
+  }
+  const results = searchIndex.filter(q => searchTextOf(q).includes(query));
+  renderSearchResults(results, query);
+}
+
+function renderSearchResults(results, label) {
+  if (!els.searchResults) return;
+  if (!results.length) {
+    els.searchResults.innerHTML = `<div class="search-result"><h3>該当なし</h3><p>${label} に一致する問題はありません。</p></div>`;
+    return;
+  }
+  const tagDrillButton = activeTag ? `<div class="search-result tag-start"><h3>#${activeTag} を周回</h3><p>ここをクリックすると、このタグだけの問題を順番に解きます。</p></div>` : "";
+  els.searchResults.innerHTML = tagDrillButton + results.map(q => `
+    <div class="search-result" data-index="${q.index}" data-chapter="${q.chapterId}">
+      <h3>${q.id.replace("ch1-", "No.")}　${q.question}</h3>
+      <p>${q.explanation.slice(0, 90)}${q.explanation.length > 90 ? "..." : ""}</p>
+      <div class="question-tags">${(q.tags || []).map(t => `<span class="qtag">#${t}</span>`).join("")}</div>
+    </div>
+  `).join("");
+  const starter = els.searchResults.querySelector(".tag-start");
+  if (starter) starter.addEventListener("click", startTagDrill);
+  els.searchResults.querySelectorAll(".search-result[data-index]").forEach(card => {
+    card.addEventListener("click", async () => {
+      const chapter = CHAPTERS.find(c => c.id === card.dataset.chapter);
+      await openChapter(chapter);
+      mode = "all";
+      order = QUESTIONS.map((_, i) => i);
+      pos = Number(card.dataset.index);
+      activeTag = null;
+      els.modeTag.classList.add("hidden");
+      setActiveButton();
+      render();
+    });
+  });
+}
+
+async function startTagDrill() {
+  if (!activeTag) return;
+  const chapter = CHAPTERS.find(c => c.id === "chapter1");
+  await openChapter(chapter);
+  mode = "tag";
+  els.modeTag.textContent = `#${activeTag}`;
+  els.modeTag.classList.remove("hidden");
+  order = QUESTIONS.map((q, i) => (q.tags || []).includes(activeTag) ? i : -1).filter(i => i >= 0);
+  pos = 0;
+  setActiveButton();
+  render();
+}
+
+
 els.submitBtn.addEventListener("click", submit);
 els.nextBtn.addEventListener("click", next);
 els.flagBtn.addEventListener("click", toggleFlag);
@@ -346,6 +461,7 @@ els.modeAll.addEventListener("click", () => setMode("all"));
 els.modeWrong.addEventListener("click", () => setMode("wrong"));
 els.modeFlag.addEventListener("click", () => setMode("flag"));
 els.modeRandom.addEventListener("click", () => setMode("random"));
+els.modeTag.addEventListener("click", () => setMode("tag"));
 els.backHome.addEventListener("click", renderHome);
 els.jumpBtn.addEventListener("click", () => {
   const n = Number(els.jumpBox.value);
@@ -400,6 +516,7 @@ function clearEditor() {
   els.editorExplanation.value = "";
   els.editorAnswer.value = "0";
   [0,1,2,3,4].forEach(i => document.getElementById("choice" + i).value = "");
+  if (els.editorTags) els.editorTags.value = "";
   els.editorMessage.className = "result hidden";
   updateEditorPreview();
 }
@@ -409,6 +526,10 @@ function addQuestionFromEditor() {
   const choices = getEditorChoices();
   const answer = Number(els.editorAnswer.value);
   const explanation = els.editorExplanation.value.trim();
+  const tags = (els.editorTags.value || "")
+    .split(",")
+    .map(t => t.trim())
+    .filter(Boolean);
 
   if (!question) return showEditorMessage("問題文が空です。", false);
   if (choices.some(c => !c)) return showEditorMessage("A〜Eの選択肢をすべて入力してください。", false);
@@ -420,7 +541,8 @@ function addQuestionFromEditor() {
     question,
     choices,
     answer,
-    explanation
+    explanation,
+    tags: ["第1章", ...tags]
   };
 
   editableQuestions.push(newQuestion);
@@ -452,6 +574,16 @@ function downloadChapterJson() {
   URL.revokeObjectURL(url);
 }
 
+
+els.searchBtn.addEventListener("click", doSearch);
+els.searchInput.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
+els.clearSearchBtn.addEventListener("click", () => {
+  els.searchInput.value = "";
+  activeTag = null;
+  renderTagCloud();
+  els.searchResults.innerHTML = "";
+});
+els.searchResults.addEventListener("dblclick", startTagDrill);
 
 els.openEditorBtn.addEventListener("click", openEditor);
 els.editorBackHome.addEventListener("click", renderHome);
