@@ -23,6 +23,8 @@ const els = {
   overallAccuracy: document.getElementById("overallAccuracy"),
   streakDays: document.getElementById("streakDays"),
   todayCount: document.getElementById("todayCount"),
+  dueReviewCount: document.getElementById("dueReviewCount"),
+  startDueReviewBtn: document.getElementById("startDueReviewBtn"),
   progressText: document.getElementById("progressText"),
   chapterBadge: document.getElementById("chapterBadge"),
   qidBadge: document.getElementById("qidBadge"),
@@ -33,6 +35,7 @@ const els = {
   flagBtn: document.getElementById("flagBtn"),
   resultBox: document.getElementById("resultBox"),
   modeAll: document.getElementById("modeAll"),
+  modeDue: document.getElementById("modeDue"),
   modeWrong: document.getElementById("modeWrong"),
   modeFlag: document.getElementById("modeFlag"),
   modeRandom: document.getElementById("modeRandom"),
@@ -65,13 +68,24 @@ function todayString() {
   return new Date().toISOString().slice(0,10);
 }
 
+function addDaysString(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0,10);
+}
+
+function isDue(dateString) {
+  if (!dateString) return true;
+  return dateString <= todayString();
+}
+
 function stateKey(chapterId = null) {
   const id = chapterId || (currentChapter ? currentChapter.id : "home");
   return `stroke_quest_${id}_v4`;
 }
 
 function getState(chapterId = null) {
-  return JSON.parse(localStorage.getItem(stateKey(chapterId)) || '{"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[]}');
+  return JSON.parse(localStorage.getItem(stateKey(chapterId)) || '{"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[],"reviews":{}}');
 }
 
 function setState(state) {
@@ -106,11 +120,14 @@ function summarizeState(chapterId) {
   const correct = records.filter(r => r.correct).length;
   const today = todayString();
   const todayAnswered = records.filter(r => (r.at || "").slice(0,10) === today).length;
+  const reviews = st.reviews || {};
+  const due = Object.values(reviews).filter(r => isDue(r.nextReview)).length;
   return {
     done,
     correct,
     wrong: (st.wrongIds || []).length,
     flag: (st.flagIds || []).length,
+    due,
     accuracy: done ? Math.round(correct / done * 100) : null,
     todayAnswered,
     dates: st.studyDates || []
@@ -128,6 +145,7 @@ function renderDashboard() {
   let totalDone = 0;
   let totalCorrect = 0;
   let todayTotal = 0;
+  let dueTotal = 0;
   let allDates = [];
 
   CHAPTERS.forEach(ch => {
@@ -137,6 +155,7 @@ function renderDashboard() {
     totalDone += s.done;
     totalCorrect += s.correct;
     todayTotal += s.todayAnswered;
+    dueTotal += s.due;
     allDates = allDates.concat(s.dates);
   });
 
@@ -148,6 +167,7 @@ function renderDashboard() {
   els.overallAccuracy.textContent = acc;
   els.streakDays.textContent = `${calcStreak(allDates)}日`;
   els.todayCount.textContent = `${todayTotal}問`;
+  if (els.dueReviewCount) els.dueReviewCount.textContent = `${dueTotal}問`;
 }
 
 function renderHome() {
@@ -181,6 +201,7 @@ function renderHome() {
         <span class="pill">正答率 ${s.accuracy === null ? "-" : s.accuracy + "%"}</span>
         <span class="pill">間違い ${s.wrong}</span>
         <span class="pill">要復習 ${s.flag}</span>
+        <span class="pill">今日復習 ${s.due}</span>
       </div>
     `;
     if (ch.status === "available") {
@@ -236,6 +257,7 @@ function updateStats() {
 function setActiveButton() {
   document.querySelectorAll(".toolbar button").forEach(b => b.classList.remove("active"));
   if (mode === "all") els.modeAll.classList.add("active");
+  if (mode === "due") els.modeDue.classList.add("active");
   if (mode === "wrong") els.modeWrong.classList.add("active");
   if (mode === "flag") els.modeFlag.classList.add("active");
   if (mode === "random") els.modeRandom.classList.add("active");
@@ -249,6 +271,7 @@ function setMode(nextMode) {
   answered = false;
 
   if (mode === "all") order = QUESTIONS.map((_, i) => i);
+  else if (mode === "due") order = QUESTIONS.map((q, i) => ((state.reviews || {})[q.id] && isDue((state.reviews || {})[q.id].nextReview)) ? i : -1).filter(i => i >= 0);
   else if (mode === "wrong") order = QUESTIONS.map((q, i) => (state.wrongIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
   else if (mode === "flag") order = QUESTIONS.map((q, i) => (state.flagIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
   else if (mode === "tag" && activeTag) order = QUESTIONS.map((q, i) => (q.tags || []).includes(activeTag) ? i : -1).filter(i => i >= 0);
@@ -272,7 +295,7 @@ function render() {
   if (order.length === 0) {
     els.progressText.textContent = "";
     els.qidBadge.textContent = "";
-    els.questionText.textContent = mode === "wrong" ? "間違い集は空です。いまのところ優秀。" : mode === "flag" ? "要復習は空です。" : "問題がありません。";
+    els.questionText.textContent = mode === "due" ? "今日の復習は空です。えらい。" : mode === "wrong" ? "間違い集は空です。いまのところ優秀。" : mode === "flag" ? "要復習は空です。" : "問題がありません。";
     els.choices.innerHTML = "";
     els.submitBtn.disabled = true;
     return;
@@ -309,6 +332,44 @@ function render() {
   });
 }
 
+
+function currentReviewRecord(qid) {
+  if (!state.reviews) state.reviews = {};
+  return state.reviews[qid] || { intervalIndex: 0, nextReview: todayString(), history: [] };
+}
+
+function updateReviewSchedule(qid, correct) {
+  if (!state.reviews) state.reviews = {};
+  const intervals = [0, 3, 7, 30];
+  const rec = currentReviewRecord(qid);
+
+  let nextIndex;
+  if (correct) {
+    nextIndex = Math.min((rec.intervalIndex || 0) + 1, intervals.length - 1);
+  } else {
+    nextIndex = 0;
+  }
+
+  rec.intervalIndex = nextIndex;
+  rec.nextReview = addDaysString(intervals[nextIndex]);
+  rec.history = rec.history || [];
+  rec.history.push({
+    at: new Date().toISOString(),
+    correct,
+    nextReview: rec.nextReview,
+    intervalDays: intervals[nextIndex]
+  });
+
+  state.reviews[qid] = rec;
+  return rec;
+}
+
+function reviewPlanText(rec) {
+  if (!rec) return "";
+  const label = rec.intervalDays === 0 ? "今日もう一度" : `${rec.intervalDays}日後`;
+  return `次回復習：${rec.nextReview}（${label}）`;
+}
+
 function submit() {
   if (selected === null || answered) return;
   const q = QUESTIONS[order[pos]];
@@ -319,6 +380,7 @@ function submit() {
   recordStudyDay();
 
   state.answered[q.id] = { correct, selected, at: new Date().toISOString() };
+  const reviewRecord = updateReviewSchedule(q.id, correct);
   if (!correct && !(state.wrongIds || []).includes(q.id)) state.wrongIds.push(q.id);
   if (correct) state.wrongIds = (state.wrongIds || []).filter(id => id !== q.id);
   save();
@@ -330,6 +392,7 @@ function submit() {
     正解：${String.fromCharCode(65 + q.answer)}. ${q.choices[q.answer]}<br>
     <hr>
     <strong>解説</strong><br>${q.explanation}
+    <div class="review-plan">${reviewPlanText(reviewRecord)}</div>
   `;
   els.submitBtn.disabled = true;
   els.nextBtn.disabled = false;
@@ -458,11 +521,17 @@ els.submitBtn.addEventListener("click", submit);
 els.nextBtn.addEventListener("click", next);
 els.flagBtn.addEventListener("click", toggleFlag);
 els.modeAll.addEventListener("click", () => setMode("all"));
+els.modeDue.addEventListener("click", () => setMode("due"));
 els.modeWrong.addEventListener("click", () => setMode("wrong"));
 els.modeFlag.addEventListener("click", () => setMode("flag"));
 els.modeRandom.addEventListener("click", () => setMode("random"));
 els.modeTag.addEventListener("click", () => setMode("tag"));
 els.backHome.addEventListener("click", renderHome);
+els.startDueReviewBtn.addEventListener("click", async () => {
+  const chapter = CHAPTERS.find(c => c.id === "chapter1");
+  await openChapter(chapter);
+  setMode("due");
+});
 els.jumpBtn.addEventListener("click", () => {
   const n = Number(els.jumpBox.value);
   if (!n || n < 1 || n > QUESTIONS.length) return;
@@ -474,7 +543,7 @@ els.jumpBtn.addEventListener("click", () => {
 });
 els.resetBtn.addEventListener("click", () => {
   if (!confirm("この章の回答記録・間違い集・要復習をリセットしますか？")) return;
-  state = {"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[]};
+  state = {"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[],"reviews":{}};
   save();
   setMode(mode);
 });

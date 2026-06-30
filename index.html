@@ -33,6 +33,11 @@
       <div class="dash-card"><p>全体正答率</p><h2 id="overallAccuracy">-</h2></div>
       <div class="dash-card"><p>連続学習日数</p><h2 id="streakDays">0日</h2></div>
       <div class="dash-card"><p>今日の回答数</p><h2 id="todayCount">0問</h2></div>
+      <div class="dash-card review">
+        <p>今日の復習</p>
+        <h2 id="dueReviewCount">0問</h2>
+        <button id="startDueReviewBtn" class="mini">復習開始</button>
+      </div>
     </section>
 
     <div class="home-actions">
@@ -66,6 +71,7 @@
     <section class="toolbar">
       <button id="backHome" class="ghost">章選択へ戻る</button>
       <button id="modeAll" class="active">順番に解く</button>
+      <button id="modeDue">今日の復習</button>
       <button id="modeWrong">間違い集</button>
       <button id="modeFlag">要復習</button>
       <button id="modeRandom">ランダム10問</button>
@@ -149,7 +155,7 @@
   </section>
 
   <section class="memo">
-    <h3>更新内容 v5</h3>
+    <h3>更新内容 v7</h3>
     <p>問題追加エディタを追加。JSONを直接書かずに、問題文・選択肢・正解・解説を入力して <code>chapter1.json</code> を作れます。</p>
   </section>
 </main>

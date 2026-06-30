@@ -139,3 +139,12 @@ pre{
 .search-result p{margin:0;color:var(--muted);line-height:1.55}
 .question-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .qtag{background:#eef2ff;color:#3730a3;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800}
+
+
+.dash-card.review{border-color:#fde68a;background:linear-gradient(135deg,#fff,#fffbeb)}
+button.mini{
+  margin-top:10px;padding:8px 12px;font-size:13px;box-shadow:none
+}
+.review-plan{
+  margin-top:12px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted);font-size:14px;line-height:1.6
+}
