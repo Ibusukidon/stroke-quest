@@ -60,6 +60,20 @@
       <div id="searchResults" class="search-results"></div>
     </section>
 
+    <section class="mastery-panel">
+      <div class="mastery-head">
+        <h2>習熟度</h2>
+        <p>S/A/B/C/Dで、どこまで定着しているかを見る。</p>
+      </div>
+      <div class="mastery-grid">
+        <div class="mastery-box rank-s"><span>S</span><strong id="rankS">0</strong><small>完全習得</small></div>
+        <div class="mastery-box rank-a"><span>A</span><strong id="rankA">0</strong><small>安定</small></div>
+        <div class="mastery-box rank-b"><span>B</span><strong id="rankB">0</strong><small>概ね理解</small></div>
+        <div class="mastery-box rank-c"><span>C</span><strong id="rankC">0</strong><small>要復習</small></div>
+        <div class="mastery-box rank-d"><span>D</span><strong id="rankD">0</strong><small>苦手</small></div>
+      </div>
+    </section>
+
     <div class="hero">
       <h2>カリキュラムから章を選択</h2>
       <p>章ごとの進捗・正答率・間違い数を見ながら潰していきます。</p>
@@ -72,6 +86,8 @@
       <button id="backHome" class="ghost">章選択へ戻る</button>
       <button id="modeAll" class="active">順番に解く</button>
       <button id="modeDue">今日の復習</button>
+      <button id="modeWeak">C/Dだけ</button>
+      <button id="modeMasteryD">Dだけ</button>
       <button id="modeWrong">間違い集</button>
       <button id="modeFlag">要復習</button>
       <button id="modeRandom">ランダム10問</button>
@@ -86,6 +102,7 @@
         <div class="badges">
           <span class="badge" id="chapterBadge">章</span>
           <span class="badge gray" id="qidBadge"></span>
+          <span class="badge mastery-badge" id="masteryBadge">D</span>
         </div>
         <span id="progressText"></span>
       </div>
@@ -155,8 +172,8 @@
   </section>
 
   <section class="memo">
-    <h3>更新内容 v7</h3>
-    <p>問題追加エディタを追加。JSONを直接書かずに、問題文・選択肢・正解・解説を入力して <code>chapter1.json</code> を作れます。</p>
+    <h3>更新内容 v8</h3>
+    <p>習熟度S/A/B/C/Dを追加。正解・不正解に応じて問題ごとのランクが変動し、C/Dだけ・Dだけを集中して回せます。</p>
   </section>
 </main>
 

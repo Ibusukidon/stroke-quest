@@ -28,6 +28,12 @@ const els = {
   progressText: document.getElementById("progressText"),
   chapterBadge: document.getElementById("chapterBadge"),
   qidBadge: document.getElementById("qidBadge"),
+  masteryBadge: document.getElementById("masteryBadge"),
+  rankS: document.getElementById("rankS"),
+  rankA: document.getElementById("rankA"),
+  rankB: document.getElementById("rankB"),
+  rankC: document.getElementById("rankC"),
+  rankD: document.getElementById("rankD"),
   questionText: document.getElementById("questionText"),
   choices: document.getElementById("choices"),
   submitBtn: document.getElementById("submitBtn"),
@@ -36,6 +42,8 @@ const els = {
   resultBox: document.getElementById("resultBox"),
   modeAll: document.getElementById("modeAll"),
   modeDue: document.getElementById("modeDue"),
+  modeWeak: document.getElementById("modeWeak"),
+  modeMasteryD: document.getElementById("modeMasteryD"),
   modeWrong: document.getElementById("modeWrong"),
   modeFlag: document.getElementById("modeFlag"),
   modeRandom: document.getElementById("modeRandom"),
@@ -85,7 +93,7 @@ function stateKey(chapterId = null) {
 }
 
 function getState(chapterId = null) {
-  return JSON.parse(localStorage.getItem(stateKey(chapterId)) || '{"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[],"reviews":{}}');
+  return JSON.parse(localStorage.getItem(stateKey(chapterId)) || '{"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[],"reviews":{},"mastery":{}}');
 }
 
 function setState(state) {
@@ -168,6 +176,7 @@ function renderDashboard() {
   els.streakDays.textContent = `${calcStreak(allDates)}日`;
   els.todayCount.textContent = `${todayTotal}問`;
   if (els.dueReviewCount) els.dueReviewCount.textContent = `${dueTotal}問`;
+  renderMasteryDashboard();
 }
 
 function renderHome() {
@@ -185,6 +194,7 @@ function renderHome() {
 
   CHAPTERS.forEach(ch => {
     const s = summarizeState(ch.id);
+    const masteryCounts = summarizeMastery(ch.id);
     const target = ch.targetCount || 300;
     const progressPct = Math.min(100, Math.round(s.done / target * 100));
     const card = document.createElement("div");
@@ -202,6 +212,8 @@ function renderHome() {
         <span class="pill">間違い ${s.wrong}</span>
         <span class="pill">要復習 ${s.flag}</span>
         <span class="pill">今日復習 ${s.due}</span>
+        <span class="pill">S ${masteryCounts.S}</span>
+        <span class="pill">C/D ${masteryCounts.C + masteryCounts.D}</span>
       </div>
     `;
     if (ch.status === "available") {
@@ -258,6 +270,8 @@ function setActiveButton() {
   document.querySelectorAll(".toolbar button").forEach(b => b.classList.remove("active"));
   if (mode === "all") els.modeAll.classList.add("active");
   if (mode === "due") els.modeDue.classList.add("active");
+  if (mode === "weak") els.modeWeak.classList.add("active");
+  if (mode === "masteryD") els.modeMasteryD.classList.add("active");
   if (mode === "wrong") els.modeWrong.classList.add("active");
   if (mode === "flag") els.modeFlag.classList.add("active");
   if (mode === "random") els.modeRandom.classList.add("active");
@@ -272,6 +286,8 @@ function setMode(nextMode) {
 
   if (mode === "all") order = QUESTIONS.map((_, i) => i);
   else if (mode === "due") order = QUESTIONS.map((q, i) => ((state.reviews || {})[q.id] && isDue((state.reviews || {})[q.id].nextReview)) ? i : -1).filter(i => i >= 0);
+  else if (mode === "weak") order = QUESTIONS.map((q, i) => ["C","D"].includes(masteryRank(q.id)) ? i : -1).filter(i => i >= 0);
+  else if (mode === "masteryD") order = QUESTIONS.map((q, i) => masteryRank(q.id) === "D" ? i : -1).filter(i => i >= 0);
   else if (mode === "wrong") order = QUESTIONS.map((q, i) => (state.wrongIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
   else if (mode === "flag") order = QUESTIONS.map((q, i) => (state.flagIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
   else if (mode === "tag" && activeTag) order = QUESTIONS.map((q, i) => (q.tags || []).includes(activeTag) ? i : -1).filter(i => i >= 0);
@@ -295,7 +311,7 @@ function render() {
   if (order.length === 0) {
     els.progressText.textContent = "";
     els.qidBadge.textContent = "";
-    els.questionText.textContent = mode === "due" ? "今日の復習は空です。えらい。" : mode === "wrong" ? "間違い集は空です。いまのところ優秀。" : mode === "flag" ? "要復習は空です。" : "問題がありません。";
+    els.questionText.textContent = mode === "weak" ? "C/D問題は空です。かなり仕上がってる。" : mode === "masteryD" ? "D問題は空です。苦手、消滅。" : mode === "due" ? "今日の復習は空です。えらい。" : mode === "wrong" ? "間違い集は空です。いまのところ優秀。" : mode === "flag" ? "要復習は空です。" : "問題がありません。";
     els.choices.innerHTML = "";
     els.submitBtn.disabled = true;
     return;
@@ -313,6 +329,11 @@ function render() {
   const q = QUESTIONS[order[pos]];
   els.progressText.textContent = `${pos + 1} / ${order.length}`;
   els.qidBadge.textContent = q.id.replace("ch1-", "No.");
+  const rank = masteryRank(q.id);
+  if (els.masteryBadge) {
+    els.masteryBadge.textContent = rank;
+    els.masteryBadge.className = "badge mastery-badge rank-" + rank.toLowerCase();
+  }
   els.questionText.textContent = q.question + ((q.tags && q.tags.length) ? "\n" : "");
   els.flagBtn.textContent = (state.flagIds || []).includes(q.id) ? "要復習から外す" : "要復習に入れる";
   els.choices.innerHTML = "";
@@ -370,6 +391,68 @@ function reviewPlanText(rec) {
   return `次回復習：${rec.nextReview}（${label}）`;
 }
 
+
+function currentMasteryRecord(qid) {
+  if (!state.mastery) state.mastery = {};
+  return state.mastery[qid] || {rank:"D", correctStreak:0, totalCorrect:0, totalWrong:0, lastAnswered:null};
+}
+function rankFromStreak(streak) {
+  if (streak >= 5) return "S";
+  if (streak >= 3) return "A";
+  if (streak >= 2) return "B";
+  if (streak >= 1) return "C";
+  return "D";
+}
+function demoteRank(rank) {
+  const order = ["D","C","B","A","S"];
+  const idx = order.indexOf(rank || "D");
+  return order[Math.max(0, idx - 1)];
+}
+function updateMastery(qid, correct) {
+  if (!state.mastery) state.mastery = {};
+  const rec = currentMasteryRecord(qid);
+  if (correct) {
+    rec.correctStreak = (rec.correctStreak || 0) + 1;
+    rec.totalCorrect = (rec.totalCorrect || 0) + 1;
+    rec.rank = rankFromStreak(rec.correctStreak);
+  } else {
+    rec.correctStreak = 0;
+    rec.totalWrong = (rec.totalWrong || 0) + 1;
+    rec.rank = demoteRank(rec.rank || "D");
+  }
+  rec.lastAnswered = new Date().toISOString();
+  state.mastery[qid] = rec;
+  return rec;
+}
+function masteryRank(qid) {
+  return currentMasteryRecord(qid).rank || "D";
+}
+function masteryText(rec) {
+  const labels = {S:"完全習得", A:"安定", B:"概ね理解", C:"要復習", D:"苦手"};
+  return `習熟度：${rec.rank}（${labels[rec.rank]}）｜連続正解 ${rec.correctStreak || 0}｜正解 ${rec.totalCorrect || 0} / 誤答 ${rec.totalWrong || 0}`;
+}
+function summarizeMastery(chapterId) {
+  const st = getState(chapterId);
+  const counts = {S:0,A:0,B:0,C:0,D:0};
+  Object.values(st.mastery || {}).forEach(rec => {
+    const r = rec.rank || "D";
+    if (counts[r] !== undefined) counts[r]++;
+  });
+  return counts;
+}
+function renderMasteryDashboard() {
+  const total = {S:0,A:0,B:0,C:0,D:0};
+  CHAPTERS.forEach(ch => {
+    const c = summarizeMastery(ch.id);
+    Object.keys(total).forEach(k => total[k] += c[k]);
+  });
+  if (els.rankS) els.rankS.textContent = total.S;
+  if (els.rankA) els.rankA.textContent = total.A;
+  if (els.rankB) els.rankB.textContent = total.B;
+  if (els.rankC) els.rankC.textContent = total.C;
+  if (els.rankD) els.rankD.textContent = total.D;
+}
+
 function submit() {
   if (selected === null || answered) return;
   const q = QUESTIONS[order[pos]];
@@ -381,6 +464,7 @@ function submit() {
 
   state.answered[q.id] = { correct, selected, at: new Date().toISOString() };
   const reviewRecord = updateReviewSchedule(q.id, correct);
+  const masteryRecord = updateMastery(q.id, correct);
   if (!correct && !(state.wrongIds || []).includes(q.id)) state.wrongIds.push(q.id);
   if (correct) state.wrongIds = (state.wrongIds || []).filter(id => id !== q.id);
   save();
@@ -393,6 +477,7 @@ function submit() {
     <hr>
     <strong>解説</strong><br>${q.explanation}
     <div class="review-plan">${reviewPlanText(reviewRecord)}</div>
+    <div class="mastery-detail">${masteryText(masteryRecord)}</div>
   `;
   els.submitBtn.disabled = true;
   els.nextBtn.disabled = false;
@@ -522,6 +607,8 @@ els.nextBtn.addEventListener("click", next);
 els.flagBtn.addEventListener("click", toggleFlag);
 els.modeAll.addEventListener("click", () => setMode("all"));
 els.modeDue.addEventListener("click", () => setMode("due"));
+els.modeWeak.addEventListener("click", () => setMode("weak"));
+els.modeMasteryD.addEventListener("click", () => setMode("masteryD"));
 els.modeWrong.addEventListener("click", () => setMode("wrong"));
 els.modeFlag.addEventListener("click", () => setMode("flag"));
 els.modeRandom.addEventListener("click", () => setMode("random"));
@@ -543,7 +630,7 @@ els.jumpBtn.addEventListener("click", () => {
 });
 els.resetBtn.addEventListener("click", () => {
   if (!confirm("この章の回答記録・間違い集・要復習をリセットしますか？")) return;
-  state = {"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[],"reviews":{}};
+  state = {"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[],"reviews":{},"mastery":{}};
   save();
   setMode(mode);
 });

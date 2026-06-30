@@ -148,4 +148,24 @@ button.mini{
 .review-plan{
   margin-top:12px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted);font-size:14px;line-height:1.6
 }
- 
+
+
+.mastery-panel{
+  background:var(--card);border:1px solid var(--line);border-radius:24px;
+  padding:22px;margin:18px 0;box-shadow:0 18px 48px rgba(15,23,42,.07)
+}
+.mastery-head h2{margin:0 0 6px;font-size:24px}
+.mastery-head p{margin:0 0 14px;color:var(--muted);line-height:1.7}
+.mastery-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.mastery-box{border:1px solid var(--line);border-radius:18px;padding:14px;text-align:center;background:#fff}
+.mastery-box span{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;font-weight:900;color:#fff;margin-bottom:8px}
+.mastery-box strong{display:block;font-size:28px}
+.mastery-box small{color:var(--muted);font-weight:800}
+.rank-s span,.badge.rank-s{background:#7c3aed}
+.rank-a span,.badge.rank-a{background:#2563eb}
+.rank-b span,.badge.rank-b{background:#16a34a}
+.rank-c span,.badge.rank-c{background:#f59e0b}
+.rank-d span,.badge.rank-d{background:#dc2626}
+.mastery-badge{color:#fff!important;background:#6b7280}
+.mastery-detail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted);font-size:14px;line-height:1.6}
+@media(max-width:720px){.mastery-grid{grid-template-columns:1fr 1fr}.mastery-box:last-child{grid-column:1/-1}}
