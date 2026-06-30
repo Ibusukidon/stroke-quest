@@ -30,23 +30,18 @@
         <h2 id="overallProgress">-</h2>
         <div class="progress-bar"><div id="overallBar"></div></div>
       </div>
-      <div class="dash-card">
-        <p>全体正答率</p>
-        <h2 id="overallAccuracy">-</h2>
-      </div>
-      <div class="dash-card">
-        <p>連続学習日数</p>
-        <h2 id="streakDays">0日</h2>
-      </div>
-      <div class="dash-card">
-        <p>今日の回答数</p>
-        <h2 id="todayCount">0問</h2>
-      </div>
+      <div class="dash-card"><p>全体正答率</p><h2 id="overallAccuracy">-</h2></div>
+      <div class="dash-card"><p>連続学習日数</p><h2 id="streakDays">0日</h2></div>
+      <div class="dash-card"><p>今日の回答数</p><h2 id="todayCount">0問</h2></div>
     </section>
+
+    <div class="home-actions">
+      <button id="openEditorBtn">問題追加エディタ</button>
+    </div>
 
     <div class="hero">
       <h2>カリキュラムから章を選択</h2>
-      <p>まずは第1章から。章ごとの進捗・正答率・間違い数を見ながら潰していきます。</p>
+      <p>章ごとの進捗・正答率・間違い数を見ながら潰していきます。</p>
     </div>
     <div id="chapterGrid" class="chapter-grid"></div>
   </section>
@@ -82,9 +77,60 @@
     </section>
   </section>
 
+  <section id="editorView" class="hidden">
+    <section class="toolbar">
+      <button id="editorBackHome" class="ghost">章選択へ戻る</button>
+      <button id="addQuestionBtn">この問題を追加</button>
+      <button id="downloadJsonBtn" class="secondary">chapter1.jsonをダウンロード</button>
+      <button id="clearEditorBtn" class="ghost">入力クリア</button>
+    </section>
+
+    <section class="editor-layout">
+      <div class="card editor-card">
+        <div class="qtop">
+          <div class="badges">
+            <span class="badge">問題追加エディタ</span>
+            <span class="badge gray" id="editorCountBadge">現在 - 問</span>
+          </div>
+        </div>
+
+        <label>問題文</label>
+        <textarea id="editorQuestion" rows="4" placeholder="例：Broca野の主座として最も適切なのはどれか。"></textarea>
+
+        <div class="choice-editor">
+          <label>A</label><input id="choice0" type="text">
+          <label>B</label><input id="choice1" type="text">
+          <label>C</label><input id="choice2" type="text">
+          <label>D</label><input id="choice3" type="text">
+          <label>E</label><input id="choice4" type="text">
+        </div>
+
+        <label>正解</label>
+        <select id="editorAnswer">
+          <option value="0">A</option>
+          <option value="1">B</option>
+          <option value="2">C</option>
+          <option value="3">D</option>
+          <option value="4">E</option>
+        </select>
+
+        <label>解説</label>
+        <textarea id="editorExplanation" rows="5" placeholder="解説を入力"></textarea>
+
+        <div id="editorMessage" class="result hidden"></div>
+      </div>
+
+      <div class="card editor-card">
+        <h2>追加予定JSON</h2>
+        <p class="subtitle">追加ボタンを押すと、このブラウザ内の一時データに追加されます。最後にJSONをダウンロードして、GitHubの <code>questions/chapter1.json</code> と差し替えます。</p>
+        <pre id="jsonPreview"></pre>
+      </div>
+    </section>
+  </section>
+
   <section class="memo">
-    <h3>更新内容 v4</h3>
-    <p>学習ダッシュボードを追加。全体進捗、章別進捗、正答率、連続学習日数、今日の回答数を表示します。</p>
+    <h3>更新内容 v5</h3>
+    <p>問題追加エディタを追加。JSONを直接書かずに、問題文・選択肢・正解・解説を入力して <code>chapter1.json</code> を作れます。</p>
   </section>
 </main>
 

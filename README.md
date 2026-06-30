@@ -2,19 +2,17 @@
 
 脳卒中専門医試験対策用のWebドリルです。
 
-## v4
+## v5
 
-- 学習ダッシュボード追加
-- 全体進捗を表示
-- 章別進捗を表示
-- 正答率を表示
-- 連続学習日数を表示
-- 今日の回答数を表示
+- 問題追加エディタ追加
+- JSONを直接触らずに問題追加
+- `chapter1.json` をブラウザからダウンロード可能
 
-## 構成
+## 使い方
 
-- `index.html`
-- `style.css`
-- `app.js`
-- `chapters.json`
-- `questions/chapter1.json`
+1. トップ画面の「問題追加エディタ」
+2. 問題文、選択肢、正解、解説を入力
+3. 「この問題を追加」
+4. 最後に「chapter1.jsonをダウンロード」
+5. ダウンロードした `chapter1.json` を `questions/chapter1.json` に上書き
+6. GitHub Desktopで Commit → Push

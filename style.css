@@ -96,3 +96,20 @@ code{background:#f3f4f6;padding:2px 6px;border-radius:6px}
   h2{font-size:20px}
   .card{padding:18px}
 }
+
+
+.home-actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.editor-layout{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.editor-card label{display:block;font-weight:900;margin:14px 0 6px}
+textarea,input,select{
+  width:100%;border:1px solid var(--line);border-radius:14px;padding:12px;
+  font-family:inherit;font-size:16px;background:#fff;color:var(--ink)
+}
+textarea{resize:vertical;line-height:1.6}
+.choice-editor{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:center;margin-top:10px}
+.choice-editor label{margin:0;text-align:center}
+pre{
+  white-space:pre-wrap;word-break:break-word;background:#111827;color:#e5e7eb;
+  padding:16px;border-radius:16px;max-height:520px;overflow:auto;font-size:13px;line-height:1.55
+}
+@media(max-width:860px){.editor-layout{grid-template-columns:1fr}}

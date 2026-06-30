@@ -39,6 +39,18 @@ const els = {
   jumpBox: document.getElementById("jumpBox"),
   jumpBtn: document.getElementById("jumpBtn"),
   backHome: document.getElementById("backHome"),
+  editorView: document.getElementById("editorView"),
+  openEditorBtn: document.getElementById("openEditorBtn"),
+  editorBackHome: document.getElementById("editorBackHome"),
+  addQuestionBtn: document.getElementById("addQuestionBtn"),
+  downloadJsonBtn: document.getElementById("downloadJsonBtn"),
+  clearEditorBtn: document.getElementById("clearEditorBtn"),
+  editorQuestion: document.getElementById("editorQuestion"),
+  editorExplanation: document.getElementById("editorExplanation"),
+  editorAnswer: document.getElementById("editorAnswer"),
+  editorMessage: document.getElementById("editorMessage"),
+  editorCountBadge: document.getElementById("editorCountBadge"),
+  jsonPreview: document.getElementById("jsonPreview"),
 };
 
 function todayString() {
@@ -135,6 +147,7 @@ function renderHome() {
   QUESTIONS = [];
   els.homeView.classList.remove("hidden");
   els.quizView.classList.add("hidden");
+  els.editorView.classList.add("hidden");
   els.subtitle.textContent = "学習ダッシュボード";
   els.totalCount.textContent = "-";
   updateStatsForHome();
@@ -349,6 +362,102 @@ els.resetBtn.addEventListener("click", () => {
   save();
   setMode(mode);
 });
+
+
+let editableQuestions = [];
+
+async function openEditor() {
+  currentChapter = CHAPTERS.find(ch => ch.id === "chapter1");
+  els.homeView.classList.add("hidden");
+  els.quizView.classList.add("hidden");
+  els.editorView.classList.remove("hidden");
+  els.subtitle.textContent = "問題追加エディタ";
+
+  const res = await fetch("questions/chapter1.json", { cache: "no-store" });
+  editableQuestions = await res.json();
+  updateEditorPreview();
+}
+
+function nextQuestionId() {
+  const nums = editableQuestions
+    .map(q => Number(String(q.id || "").replace("ch1-", "")))
+    .filter(n => !Number.isNaN(n));
+  const next = nums.length ? Math.max(...nums) + 1 : 1;
+  return "ch1-" + String(next).padStart(3, "0");
+}
+
+function getEditorChoices() {
+  return [0,1,2,3,4].map(i => document.getElementById("choice" + i).value.trim());
+}
+
+function showEditorMessage(text, ok=true) {
+  els.editorMessage.className = "result " + (ok ? "right" : "wrong");
+  els.editorMessage.textContent = text;
+}
+
+function clearEditor() {
+  els.editorQuestion.value = "";
+  els.editorExplanation.value = "";
+  els.editorAnswer.value = "0";
+  [0,1,2,3,4].forEach(i => document.getElementById("choice" + i).value = "");
+  els.editorMessage.className = "result hidden";
+  updateEditorPreview();
+}
+
+function addQuestionFromEditor() {
+  const question = els.editorQuestion.value.trim();
+  const choices = getEditorChoices();
+  const answer = Number(els.editorAnswer.value);
+  const explanation = els.editorExplanation.value.trim();
+
+  if (!question) return showEditorMessage("問題文が空です。", false);
+  if (choices.some(c => !c)) return showEditorMessage("A〜Eの選択肢をすべて入力してください。", false);
+  if (!explanation) return showEditorMessage("解説が空です。", false);
+
+  const newQuestion = {
+    id: nextQuestionId(),
+    chapter: "第1章 脳の解剖と機能",
+    question,
+    choices,
+    answer,
+    explanation
+  };
+
+  editableQuestions.push(newQuestion);
+  showEditorMessage(`${newQuestion.id} を追加しました。最後に chapter1.json をダウンロードしてください。`, true);
+  clearEditor();
+  updateEditorPreview();
+}
+
+function updateEditorPreview() {
+  if (!editableQuestions.length) {
+    els.editorCountBadge.textContent = "現在 - 問";
+    els.jsonPreview.textContent = "読み込み中...";
+    return;
+  }
+  els.editorCountBadge.textContent = `現在 ${editableQuestions.length} 問`;
+  const latest = editableQuestions.slice(-3);
+  els.jsonPreview.textContent = JSON.stringify(latest, null, 2);
+}
+
+function downloadChapterJson() {
+  const blob = new Blob([JSON.stringify(editableQuestions, null, 2)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "chapter1.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+
+els.openEditorBtn.addEventListener("click", openEditor);
+els.editorBackHome.addEventListener("click", renderHome);
+els.addQuestionBtn.addEventListener("click", addQuestionFromEditor);
+els.downloadJsonBtn.addEventListener("click", downloadChapterJson);
+els.clearEditorBtn.addEventListener("click", clearEditor);
 
 loadChapters().catch(e => {
   els.chapterGrid.innerHTML = `<div class="chapter-card disabled"><h3>読み込み失敗</h3><p>${e.message}</p></div>`;
