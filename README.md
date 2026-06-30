@@ -2,17 +2,19 @@
 
 脳卒中専門医試験対策用のWebドリルです。
 
-## v3
+## v4
 
-- 章選択画面を追加
-- `chapters.json` で章管理
-- `questions/chapter1.json` で問題管理
-- 第2章以降を追加しやすい構成に変更
+- 学習ダッシュボード追加
+- 全体進捗を表示
+- 章別進捗を表示
+- 正答率を表示
+- 連続学習日数を表示
+- 今日の回答数を表示
 
 ## 構成
 
-- `index.html`：画面本体
-- `style.css`：デザイン
-- `app.js`：アプリ動作
-- `chapters.json`：章一覧
-- `questions/chapter1.json`：第1章の問題データ
+- `index.html`
+- `style.css`
+- `app.js`
+- `chapters.json`
+- `questions/chapter1.json`

@@ -4,27 +4,31 @@
     "title": "第1章　脳の解剖と機能",
     "description": "言語、高次脳機能、運動・感覚、視覚、脳幹、小脳、血管支配、髄液循環",
     "file": "questions/chapter1.json",
-    "status": "available"
+    "status": "available",
+    "targetCount": 300
   },
   {
     "id": "chapter2",
     "title": "第2章　脳卒中の疫学・危険因子",
     "description": "準備中",
     "file": "questions/chapter2.json",
-    "status": "comingSoon"
+    "status": "comingSoon",
+    "targetCount": 300
   },
   {
     "id": "chapter3",
     "title": "第3章　脳卒中の診断",
     "description": "準備中",
     "file": "questions/chapter3.json",
-    "status": "comingSoon"
+    "status": "comingSoon",
+    "targetCount": 300
   },
   {
     "id": "chapter4",
     "title": "第4章　急性期治療",
     "description": "準備中",
     "file": "questions/chapter4.json",
-    "status": "comingSoon"
+    "status": "comingSoon",
+    "targetCount": 300
   }
 ]

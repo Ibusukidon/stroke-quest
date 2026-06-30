@@ -17,6 +17,11 @@ const els = {
   wrongCount: document.getElementById("wrongCount"),
   flagCount: document.getElementById("flagCount"),
   accuracy: document.getElementById("accuracy"),
+  overallProgress: document.getElementById("overallProgress"),
+  overallBar: document.getElementById("overallBar"),
+  overallAccuracy: document.getElementById("overallAccuracy"),
+  streakDays: document.getElementById("streakDays"),
+  todayCount: document.getElementById("todayCount"),
   progressText: document.getElementById("progressText"),
   chapterBadge: document.getElementById("chapterBadge"),
   qidBadge: document.getElementById("qidBadge"),
@@ -36,13 +41,17 @@ const els = {
   backHome: document.getElementById("backHome"),
 };
 
-function stateKey() {
-  return currentChapter ? `stroke_quest_${currentChapter.id}_v3` : "stroke_quest_home_v3";
+function todayString() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function stateKey(chapterId = null) {
+  const id = chapterId || (currentChapter ? currentChapter.id : "home");
+  return `stroke_quest_${id}_v4`;
 }
 
 function getState(chapterId = null) {
-  const key = chapterId ? `stroke_quest_${chapterId}_v3` : stateKey();
-  return JSON.parse(localStorage.getItem(key) || '{"answered":{},"wrongIds":[],"flagIds":[]}');
+  return JSON.parse(localStorage.getItem(stateKey(chapterId)) || '{"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[]}');
 }
 
 function setState(state) {
@@ -51,10 +60,74 @@ function setState(state) {
 
 let state = getState();
 
+function recordStudyDay() {
+  const t = todayString();
+  if (!state.studyDates) state.studyDates = [];
+  if (!state.studyDates.includes(t)) state.studyDates.push(t);
+}
+
+function calcStreak(allDates) {
+  const set = new Set(allDates);
+  let d = new Date();
+  let streak = 0;
+  while (true) {
+    const s = d.toISOString().slice(0,10);
+    if (!set.has(s)) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function summarizeState(chapterId) {
+  const st = getState(chapterId);
+  const records = Object.values(st.answered || {});
+  const done = records.length;
+  const correct = records.filter(r => r.correct).length;
+  const today = todayString();
+  const todayAnswered = records.filter(r => (r.at || "").slice(0,10) === today).length;
+  return {
+    done,
+    correct,
+    wrong: (st.wrongIds || []).length,
+    flag: (st.flagIds || []).length,
+    accuracy: done ? Math.round(correct / done * 100) : null,
+    todayAnswered,
+    dates: st.studyDates || []
+  };
+}
+
 async function loadChapters() {
   const res = await fetch("chapters.json", { cache: "no-store" });
   CHAPTERS = await res.json();
   renderHome();
+}
+
+function renderDashboard() {
+  let totalTarget = 0;
+  let totalDone = 0;
+  let totalCorrect = 0;
+  let todayTotal = 0;
+  let allDates = [];
+
+  CHAPTERS.forEach(ch => {
+    const target = ch.targetCount || 0;
+    const s = summarizeState(ch.id);
+    totalTarget += target;
+    totalDone += s.done;
+    totalCorrect += s.correct;
+    todayTotal += s.todayAnswered;
+    allDates = allDates.concat(s.dates);
+  });
+
+  const progressPct = totalTarget ? Math.min(100, Math.round(totalDone / totalTarget * 100)) : 0;
+  const acc = totalDone ? Math.round(totalCorrect / totalDone * 100) + "%" : "-";
+
+  els.overallProgress.textContent = `${totalDone}/${totalTarget}問`;
+  els.overallBar.style.width = `${progressPct}%`;
+  els.overallAccuracy.textContent = acc;
+  els.streakDays.textContent = `${calcStreak(allDates)}日`;
+  els.todayCount.textContent = `${todayTotal}問`;
 }
 
 function renderHome() {
@@ -62,26 +135,30 @@ function renderHome() {
   QUESTIONS = [];
   els.homeView.classList.remove("hidden");
   els.quizView.classList.add("hidden");
-  els.subtitle.textContent = "章を選んで学習開始";
+  els.subtitle.textContent = "学習ダッシュボード";
   els.totalCount.textContent = "-";
   updateStatsForHome();
+  renderDashboard();
   els.chapterGrid.innerHTML = "";
 
   CHAPTERS.forEach(ch => {
-    const st = getState(ch.id);
-    const done = Object.keys(st.answered).length;
-    const wrong = st.wrongIds.length;
-    const flag = st.flagIds.length;
+    const s = summarizeState(ch.id);
+    const target = ch.targetCount || 300;
+    const progressPct = Math.min(100, Math.round(s.done / target * 100));
     const card = document.createElement("div");
     card.className = "chapter-card" + (ch.status !== "available" ? " disabled" : "");
     card.innerHTML = `
       <h3>${ch.title}</h3>
       <p>${ch.description}</p>
+      <div class="chapter-progress">
+        <div class="chapter-progress-top"><span>${s.done}/${target}問</span><span>${progressPct}%</span></div>
+        <div class="progress-bar"><div style="width:${progressPct}%"></div></div>
+      </div>
       <div class="chapter-meta">
         <span class="pill ${ch.status === "available" ? "good" : "soon"}">${ch.status === "available" ? "利用可" : "準備中"}</span>
-        <span class="pill">回答済 ${done}</span>
-        <span class="pill">間違い ${wrong}</span>
-        <span class="pill">要復習 ${flag}</span>
+        <span class="pill">正答率 ${s.accuracy === null ? "-" : s.accuracy + "%"}</span>
+        <span class="pill">間違い ${s.wrong}</span>
+        <span class="pill">要復習 ${s.flag}</span>
       </div>
     `;
     if (ch.status === "available") {
@@ -125,12 +202,12 @@ function save() {
 }
 
 function updateStats() {
-  const records = Object.values(state.answered);
+  const records = Object.values(state.answered || {});
   const done = records.length;
   const correct = records.filter(r => r.correct).length;
   els.doneCount.textContent = done;
-  els.wrongCount.textContent = state.wrongIds.length;
-  els.flagCount.textContent = state.flagIds.length;
+  els.wrongCount.textContent = (state.wrongIds || []).length;
+  els.flagCount.textContent = (state.flagIds || []).length;
   els.accuracy.textContent = done ? Math.round(correct / done * 100) + "%" : "-";
 }
 
@@ -148,15 +225,10 @@ function setMode(nextMode) {
   selected = null;
   answered = false;
 
-  if (mode === "all") {
-    order = QUESTIONS.map((_, i) => i);
-  } else if (mode === "wrong") {
-    order = QUESTIONS.map((q, i) => state.wrongIds.includes(q.id) ? i : -1).filter(i => i >= 0);
-  } else if (mode === "flag") {
-    order = QUESTIONS.map((q, i) => state.flagIds.includes(q.id) ? i : -1).filter(i => i >= 0);
-  } else {
-    order = QUESTIONS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 10);
-  }
+  if (mode === "all") order = QUESTIONS.map((_, i) => i);
+  else if (mode === "wrong") order = QUESTIONS.map((q, i) => (state.wrongIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
+  else if (mode === "flag") order = QUESTIONS.map((q, i) => (state.flagIds || []).includes(q.id) ? i : -1).filter(i => i >= 0);
+  else order = QUESTIONS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 10);
 
   setActiveButton();
   render();
@@ -195,7 +267,7 @@ function render() {
   els.progressText.textContent = `${pos + 1} / ${order.length}`;
   els.qidBadge.textContent = q.id.replace("ch1-", "No.");
   els.questionText.textContent = q.question;
-  els.flagBtn.textContent = state.flagIds.includes(q.id) ? "要復習から外す" : "要復習に入れる";
+  els.flagBtn.textContent = (state.flagIds || []).includes(q.id) ? "要復習から外す" : "要復習に入れる";
   els.choices.innerHTML = "";
 
   q.choices.forEach((choice, idx) => {
@@ -219,9 +291,12 @@ function submit() {
   answered = true;
   const correct = selected === q.answer;
 
+  if (!state.studyDates) state.studyDates = [];
+  recordStudyDay();
+
   state.answered[q.id] = { correct, selected, at: new Date().toISOString() };
-  if (!correct && !state.wrongIds.includes(q.id)) state.wrongIds.push(q.id);
-  if (correct) state.wrongIds = state.wrongIds.filter(id => id !== q.id);
+  if (!correct && !(state.wrongIds || []).includes(q.id)) state.wrongIds.push(q.id);
+  if (correct) state.wrongIds = (state.wrongIds || []).filter(id => id !== q.id);
   save();
 
   els.resultBox.className = "result " + (correct ? "right" : "wrong");
@@ -244,11 +319,9 @@ function next() {
 function toggleFlag() {
   if (order.length === 0 || pos >= order.length) return;
   const q = QUESTIONS[order[pos]];
-  if (state.flagIds.includes(q.id)) {
-    state.flagIds = state.flagIds.filter(id => id !== q.id);
-  } else {
-    state.flagIds.push(q.id);
-  }
+  if (!state.flagIds) state.flagIds = [];
+  if (state.flagIds.includes(q.id)) state.flagIds = state.flagIds.filter(id => id !== q.id);
+  else state.flagIds.push(q.id);
   save();
   render();
 }
@@ -272,7 +345,7 @@ els.jumpBtn.addEventListener("click", () => {
 });
 els.resetBtn.addEventListener("click", () => {
   if (!confirm("この章の回答記録・間違い集・要復習をリセットしますか？")) return;
-  state = {"answered":{},"wrongIds":[],"flagIds":[]};
+  state = {"answered":{},"wrongIds":[],"flagIds":[],"studyDates":[]};
   save();
   setMode(mode);
 });

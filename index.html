@@ -12,7 +12,7 @@
     <div>
       <p class="eyebrow">stroke-quest</p>
       <h1>脳卒中専門医試験ドリル</h1>
-      <p class="subtitle" id="subtitle">章を選んで学習開始</p>
+      <p class="subtitle" id="subtitle">学習ダッシュボード</p>
     </div>
     <div class="stats">
       <div><span id="totalCount">-</span><small>総問題</small></div>
@@ -24,9 +24,29 @@
   </header>
 
   <section id="homeView">
+    <section class="dashboard">
+      <div class="dash-card primary">
+        <p>全体進捗</p>
+        <h2 id="overallProgress">-</h2>
+        <div class="progress-bar"><div id="overallBar"></div></div>
+      </div>
+      <div class="dash-card">
+        <p>全体正答率</p>
+        <h2 id="overallAccuracy">-</h2>
+      </div>
+      <div class="dash-card">
+        <p>連続学習日数</p>
+        <h2 id="streakDays">0日</h2>
+      </div>
+      <div class="dash-card">
+        <p>今日の回答数</p>
+        <h2 id="todayCount">0問</h2>
+      </div>
+    </section>
+
     <div class="hero">
       <h2>カリキュラムから章を選択</h2>
-      <p>まずは第1章から。第2章以降はこの土台に問題データを追加して拡張します。</p>
+      <p>まずは第1章から。章ごとの進捗・正答率・間違い数を見ながら潰していきます。</p>
     </div>
     <div id="chapterGrid" class="chapter-grid"></div>
   </section>
@@ -63,8 +83,8 @@
   </section>
 
   <section class="memo">
-    <h3>更新内容 v3</h3>
-    <p>トップ画面に章選択を追加。今後は <code>chapters.json</code> と <code>questions/chapterX.json</code> を追加すれば章を増やせます。</p>
+    <h3>更新内容 v4</h3>
+    <p>学習ダッシュボードを追加。全体進捗、章別進捗、正答率、連続学習日数、今日の回答数を表示します。</p>
   </section>
 </main>
 
