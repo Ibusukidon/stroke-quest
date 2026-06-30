@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>脳卒中専門医試験ドリル 第1章 増量版</title>
+<style>
+:root {
+  --bg:#f5f7fb; --card:#fff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+  --accent:#2563eb; --accent2:#dbeafe; --wrong:#dc2626; --right:#16a34a; --warn:#f59e0b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:linear-gradient(135deg,#eef4ff,#f9fafb);color:var(--ink)}
+.app{max-width:980px;margin:0 auto;padding:28px 18px 48px}
+header{display:flex;gap:20px;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
+.eyebrow{letter-spacing:.12em;color:var(--accent);font-weight:800;margin:0 0 6px}
+h1{font-size:32px;margin:0} .subtitle{margin:8px 0 0;color:var(--muted)}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stats div{min-width:82px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+.stats span{display:block;font-size:22px;font-weight:900} .stats small{color:var(--muted)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+button{border:0;border-radius:999px;padding:12px 18px;background:var(--accent);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.22)}
+button.secondary{background:#111827} button.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+button.warn{background:var(--warn)} button.active{outline:3px solid var(--accent2)} button:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 18px 48px rgba(15,23,42,.08)}
+.qtop{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:14px;align-items:center}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{background:var(--accent2);color:var(--accent);font-weight:900;padding:6px 10px;border-radius:999px;font-size:13px}
+.badge.gray{background:#f3f4f6;color:#374151}
+h2{font-size:24px;line-height:1.55;margin:10px 0 20px}
+.choices{display:grid;gap:10px}
+.choice{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;background:#fff}
+.choice:hover{background:#f8fafc} .choice input{margin-top:4px;transform:scale(1.2)} .choice.selected{border-color:var(--accent);background:#eff6ff}
+.actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.result{margin-top:20px;border-radius:18px;padding:18px;border:1px solid var(--line);background:#f9fafb;line-height:1.75}
+.result.right{border-color:#bbf7d0;background:#f0fdf4} .result.wrong{border-color:#fecaca;background:#fef2f2}
+.hidden{display:none}
+.memo{margin-top:18px;background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:20px;padding:18px;color:var(--muted);line-height:1.7}
+.memo h3{margin-top:0;color:var(--ink)}
+#jumpBox{border:1px solid var(--line);border-radius:999px;padding:10px 14px;max-width:110px}
+@media(max-width:720px){header{display:block}.stats{margin-top:16px}h1{font-size:26px}h2{font-size:20px}.card{padding:18px}}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+  <div>
+    <p class="eyebrow">Stroke Board Trainer</p>
+    <h1>脳卒中専門医試験ドリル</h1>
+    <p class="subtitle">第1章：脳の解剖と機能｜増量版 80問</p>
+  </div>
+  <div class="stats">
+    <div><span id="totalCount">80</span><small>総問題</small></div>
+    <div><span id="doneCount">0</span><small>回答済</small></div>
+    <div><span id="wrongCount">0</span><small>間違い</small></div>
+    <div><span id="flagCount">0</span><small>要復習</small></div>
+    <div><span id="accuracy">-</span><small>正答率</small></div>
+  </div>
+</header>
+
+<section class="toolbar">
+  <button id="modeAll" class="active">順番に解く</button>
+  <button id="modeWrong">間違い集</button>
+  <button id="modeFlag">要復習</button>
+  <button id="modeRandom">ランダム10問</button>
+  <input id="jumpBox" type="number" min="1" max="80" placeholder="番号">
+  <button id="jumpBtn" class="ghost">ジャンプ</button>
+  <button id="resetBtn" class="ghost">記録リセット</button>
+</section>
+
+<section class="card">
+  <div class="qtop">
+    <div class="badges">
+      <span class="badge">第1章</span>
+      <span class="badge gray" id="qidBadge"></span>
+    </div>
+    <span id="progressText"></span>
+  </div>
+  <h2 id="questionText"></h2>
+  <div id="choices" class="choices"></div>
+  <div class="actions">
+    <button id="submitBtn">回答する</button>
+    <button id="nextBtn" class="secondary" disabled>次へ</button>
+    <button id="flagBtn" class="warn">要復習に入れる</button>
+  </div>
+  <div id="resultBox" class="result hidden"></div>
+</section>
+
+<section class="memo">
+  <h3>この版の仕様</h3>
+  <p>第1章を広く舐めるためのオリジナル問題を 80問入れています。公式過去問の丸写しではなく、試験範囲の確認用です。間違い集・要復習・正答率は同じブラウザ内に保存されます。</p>
+</section>
+</main>
+
+<script>
+const QUESTIONS = [{"id": "ch1-001", "chapter": "第1章 脳の解剖と機能", "question": "Broca野の主座として最も適切なのはどれか。", "choices": ["優位半球の上側頭回後部", "優位半球の下前頭回後部", "非優位半球の角回", "両側中心後回", "前頭眼野"], "answer": 1, "explanation": "Broca野は通常、優位半球の下前頭回後部に位置し、運動性言語に関与する。"}, {"id": "ch1-002", "chapter": "第1章 脳の解剖と機能", "question": "Wernicke失語で典型的にみられる所見はどれか。", "choices": ["発語量低下、理解良好、復唱障害", "流暢な発語、理解障害、復唱障害", "構音障害のみで理解は保たれる", "失書のみで発語は正常", "意識障害を伴う無言状態"], "answer": 1, "explanation": "Wernicke失語は流暢性失語で、理解障害と復唱障害を伴う。"}, {"id": "ch1-003", "chapter": "第1章 脳の解剖と機能", "question": "伝導失語で比較的特徴的なのはどれか。", "choices": ["復唱が著明に障害される", "理解が完全に障害される", "発語が非流暢でほぼ無言となる", "失行のみを呈する", "同名半盲が必発である"], "answer": 0, "explanation": "伝導失語は弓状束などの障害で、理解と自発話が比較的保たれる一方、復唱障害が目立つ。"}, {"id": "ch1-004", "chapter": "第1章 脳の解剖と機能", "question": "優位半球角回病変でみられやすい組み合わせはどれか。", "choices": ["失算・失書・左右失認・手指失認", "同名半盲・視覚失認のみ", "運動失調・企図振戦", "嗅覚脱失・人格変化", "嚥下障害・嗄声"], "answer": 0, "explanation": "優位半球角回周辺ではGerstmann症候群が有名。"}, {"id": "ch1-005", "chapter": "第1章 脳の解剖と機能", "question": "非優位半球頭頂葉病変で目立ちやすい症候はどれか。", "choices": ["左半側空間無視", "Broca失語", "純粋失読", "嗅覚脱失", "垂直性眼球運動障害"], "answer": 0, "explanation": "非優位半球、とくに右頭頂葉病変では左半側空間無視が典型的。"}, {"id": "ch1-006", "chapter": "第1章 脳の解剖と機能", "question": "前頭葉背外側前頭前野の障害でみられやすい症状はどれか。", "choices": ["遂行機能障害", "同名半盲", "聴覚過敏", "交代性片麻痺", "核間性眼筋麻痺"], "answer": 0, "explanation": "背外側前頭前野は作業記憶、注意、計画、遂行機能と関連する。"}, {"id": "ch1-007", "chapter": "第1章 脳の解剖と機能", "question": "眼窩前頭皮質の障害で比較的みられやすいのはどれか。", "choices": ["脱抑制・社会的行動異常", "同側四肢失調", "純粋運動性片麻痺", "皮質盲", "下位運動ニューロン徴候"], "answer": 0, "explanation": "眼窩前頭皮質障害では脱抑制、易怒性、社会的判断の低下などが目立つ。"}, {"id": "ch1-008", "chapter": "第1章 脳の解剖と機能", "question": "補足運動野の障害でみられうる症候として適切なのはどれか。", "choices": ["自発運動開始困難", "両耳側半盲", "嗅覚性幻覚のみ", "動眼神経麻痺", "温痛覚解離"], "answer": 0, "explanation": "補足運動野は運動の開始・系列化に関与し、障害で無動や発語開始困難が出ることがある。"}, {"id": "ch1-009", "chapter": "第1章 脳の解剖と機能", "question": "一次運動野が主に存在する部位はどれか。", "choices": ["中心前回", "中心後回", "上側頭回", "鳥距溝周囲", "海馬傍回"], "answer": 0, "explanation": "一次運動野は中心前回、一次体性感覚野は中心後回に存在する。"}, {"id": "ch1-010", "chapter": "第1章 脳の解剖と機能", "question": "一次体性感覚野が主に存在する部位はどれか。", "choices": ["中心前回", "中心後回", "下前頭回", "島皮質前部", "扁桃体"], "answer": 1, "explanation": "中心後回は一次体性感覚野。中心前回は一次運動野。"}, {"id": "ch1-011", "chapter": "第1章 脳の解剖と機能", "question": "内包後脚に主に走行する線維として重要なのはどれか。", "choices": ["錐体路", "嗅索", "視神経", "脳弓", "内側縦束"], "answer": 0, "explanation": "内包後脚には皮質脊髄路などの錐体路線維が密に走行する。"}, {"id": "ch1-012", "chapter": "第1章 脳の解剖と機能", "question": "純粋運動性片麻痺を来しやすい病変部位はどれか。", "choices": ["内包後脚", "海馬", "後頭葉内側面", "小脳虫部", "角回"], "answer": 0, "explanation": "内包後脚、放線冠、橋底部などの小梗塞で純粋運動性片麻痺を来しうる。"}, {"id": "ch1-013", "chapter": "第1章 脳の解剖と機能", "question": "顔面と上肢の麻痺が下肢より目立つ皮質梗塞で、最も疑いやすい血管領域はどれか。", "choices": ["中大脳動脈", "前大脳動脈", "後大脳動脈", "上小脳動脈", "後下小脳動脈"], "answer": 0, "explanation": "MCA領域は一次運動野外側面を含み、顔面・上肢優位の運動麻痺が出やすい。"}, {"id": "ch1-014", "chapter": "第1章 脳の解剖と機能", "question": "下肢優位の片麻痺を来しやすい血管領域はどれか。", "choices": ["前大脳動脈", "中大脳動脈", "後大脳動脈", "前下小脳動脈", "脳底動脈穿通枝のみ"], "answer": 0, "explanation": "ACAは内側前頭葉〜頭頂葉を灌流し、下肢領域の障害を来しやすい。"}, {"id": "ch1-015", "chapter": "第1章 脳の解剖と機能", "question": "皮質脊髄路が錐体交叉を行う主な部位はどこか。", "choices": ["延髄下部", "橋上部", "中脳被蓋", "視床", "内包"], "answer": 0, "explanation": "皮質脊髄路の大部分は延髄下部の錐体交叉で交叉する。"}, {"id": "ch1-016", "chapter": "第1章 脳の解剖と機能", "question": "外側膝状体が主に関与する機能はどれか。", "choices": ["聴覚", "視覚", "嗅覚", "平衡覚", "痛覚"], "answer": 1, "explanation": "外側膝状体は視覚伝導路の中継核。内側膝状体は聴覚。"}, {"id": "ch1-017", "chapter": "第1章 脳の解剖と機能", "question": "一次視覚野が存在する代表的部位はどれか。", "choices": ["鳥距溝周囲", "中心前回", "上側頭回", "下前頭回", "小脳虫部"], "answer": 0, "explanation": "一次視覚野は後頭葉内側面の鳥距溝周囲に存在する。"}, {"id": "ch1-018", "chapter": "第1章 脳の解剖と機能", "question": "Meyer loop障害で典型的なのはどれか。", "choices": ["対側上四分盲", "対側下四分盲", "両耳側半盲", "中心暗点", "皮質盲のみ"], "answer": 0, "explanation": "Meyer loopは側頭葉を走行する視放線下部で、障害により対側上四分盲を来す。"}, {"id": "ch1-019", "chapter": "第1章 脳の解剖と機能", "question": "頭頂葉を走行する視放線の障害で比較的典型的なのはどれか。", "choices": ["対側下四分盲", "対側上四分盲", "両鼻側半盲", "片眼性視力低下", "眼瞼下垂のみ"], "answer": 0, "explanation": "頭頂葉視放線の障害では対側下四分盲が出やすい。側頭葉Meyer loopでは対側上四分盲。"}, {"id": "ch1-020", "chapter": "第1章 脳の解剖と機能", "question": "視交叉中央部の障害でみられやすい視野障害はどれか。", "choices": ["両耳側半盲", "同名半盲", "中心暗点", "対側上四分盲", "皮質盲"], "answer": 0, "explanation": "視交叉中央部では鼻側網膜線維が障害され、両耳側半盲を来す。"}, {"id": "ch1-021", "chapter": "第1章 脳の解剖と機能", "question": "右後頭葉一次視覚野の障害で典型的なのはどれか。", "choices": ["左同名半盲", "右同名半盲", "両耳側半盲", "左眼のみ失明", "右眼のみ失明"], "answer": 0, "explanation": "後頭葉病変では病変反対側の同名半盲を来す。右後頭葉なら左同名半盲。"}, {"id": "ch1-022", "chapter": "第1章 脳の解剖と機能", "question": "内側膝状体が主に関与する機能はどれか。", "choices": ["聴覚", "視覚", "嗅覚", "温痛覚", "運動制御"], "answer": 0, "explanation": "内側膝状体は聴覚伝導路の中継核。外側膝状体は視覚。"}, {"id": "ch1-023", "chapter": "第1章 脳の解剖と機能", "question": "嗅覚情報の特徴として正しいのはどれか。", "choices": ["視床を経由せず一次嗅皮質へ投射する経路をもつ", "必ず外側膝状体を経由する", "脊髄後索を上行する", "内耳から入力される", "錐体交叉で交叉する"], "answer": 0, "explanation": "嗅覚は視床中継を必須とせず、嗅球から一次嗅皮質へ投射する点が特徴。"}, {"id": "ch1-024", "chapter": "第1章 脳の解剖と機能", "question": "Papez回路に含まれる構造として適切なのはどれか。", "choices": ["海馬、脳弓、乳頭体、前視床核、帯状回", "被殻、淡蒼球、視床下核、黒質", "外側膝状体、視放線、鳥距溝", "蝸牛神経核、上オリーブ核、内側膝状体", "橋核、中小脳脚、歯状核"], "answer": 0, "explanation": "Papez回路は海馬→脳弓→乳頭体→前視床核→帯状回→海馬傍回の流れで押さえる。"}, {"id": "ch1-025", "chapter": "第1章 脳の解剖と機能", "question": "記憶形成、とくに陳述記憶に重要な構造はどれか。", "choices": ["海馬", "被殻", "黒質緻密部", "中心前回", "外側膝状体"], "answer": 0, "explanation": "海馬は陳述記憶の形成に重要。両側障害では前向性健忘が目立つ。"}, {"id": "ch1-026", "chapter": "第1章 脳の解剖と機能", "question": "扁桃体が主に関与する機能として適切なのはどれか。", "choices": ["恐怖・情動反応", "一次運動", "視覚中継", "聴覚中継", "髄液産生"], "answer": 0, "explanation": "扁桃体は恐怖条件づけなど情動反応に関与する。"}, {"id": "ch1-027", "chapter": "第1章 脳の解剖と機能", "question": "基底核に含まれる構造として適切なのはどれか。", "choices": ["尾状核・被殻・淡蒼球", "海馬・脳弓・乳頭体", "橋核・歯状核・小脳虫部", "外側膝状体・視放線・鳥距溝", "前角・後角・中心管"], "answer": 0, "explanation": "基底核は尾状核、被殻、淡蒼球、視床下核、黒質などを含む。"}, {"id": "ch1-028", "chapter": "第1章 脳の解剖と機能", "question": "線条体を構成する代表的構造はどれか。", "choices": ["尾状核と被殻", "淡蒼球と視床下核", "海馬と扁桃体", "外側膝状体と内側膝状体", "小脳虫部と歯状核"], "answer": 0, "explanation": "線条体は尾状核と被殻を指す。"}, {"id": "ch1-029", "chapter": "第1章 脳の解剖と機能", "question": "Parkinson病で変性が目立つ部位として代表的なのはどれか。", "choices": ["黒質緻密部", "外側膝状体", "中心後回", "脳弓", "下丘"], "answer": 0, "explanation": "Parkinson病では黒質緻密部ドパミン神経の変性が重要。"}, {"id": "ch1-030", "chapter": "第1章 脳の解剖と機能", "question": "視床下核障害で出現しやすい不随意運動はどれか。", "choices": ["片側バリズム", "ミオクローヌスのみ", "アテトーゼのみ", "ジストニアのみ", "羽ばたき振戦"], "answer": 0, "explanation": "視床下核病変では対側のhemiballismusが典型的。"}, {"id": "ch1-031", "chapter": "第1章 脳の解剖と機能", "question": "視床後外側腹側核（VPL）が中継する感覚として主に適切なのはどれか。", "choices": ["体幹・四肢の体性感覚", "顔面の体性感覚", "嗅覚", "聴覚", "視覚"], "answer": 0, "explanation": "VPLは体幹・四肢の感覚、VPMは顔面感覚の中継。"}, {"id": "ch1-032", "chapter": "第1章 脳の解剖と機能", "question": "視床後内側腹側核（VPM）が主に中継するのはどれか。", "choices": ["顔面の体性感覚", "下肢の運動", "視覚", "聴覚", "記憶"], "answer": 0, "explanation": "VPMは三叉神経系など顔面感覚の中継核。"}, {"id": "ch1-033", "chapter": "第1章 脳の解剖と機能", "question": "視床痛を来しうる病変部位として最も関連が深いのはどれか。", "choices": ["視床感覚中継核", "小脳虫部", "嗅球", "前頭眼野", "脳弓"], "answer": 0, "explanation": "視床病変後に中枢性疼痛を来すことがある。"}, {"id": "ch1-034", "chapter": "第1章 脳の解剖と機能", "question": "内包膝部に近接して走行する線維として重要なのはどれか。", "choices": ["皮質延髄路", "嗅索", "脳弓", "視神経", "下小脳脚"], "answer": 0, "explanation": "皮質延髄路は内包膝部周辺を走行する。"}, {"id": "ch1-035", "chapter": "第1章 脳の解剖と機能", "question": "内包後脚の後方寄りに関連が深い線維はどれか。", "choices": ["視放線", "嗅索", "脳弓", "前交連のみ", "迷走神経"], "answer": 0, "explanation": "内包後脚後方〜後部には視放線などが関連する。詳細な局在は試験で問われやすい。"}, {"id": "ch1-036", "chapter": "第1章 脳の解剖と機能", "question": "動眼神経核が存在する主な部位はどれか。", "choices": ["中脳", "橋", "延髄", "視床", "小脳"], "answer": 0, "explanation": "動眼神経核は中脳に存在する。"}, {"id": "ch1-037", "chapter": "第1章 脳の解剖と機能", "question": "外転神経核が存在する主な部位はどれか。", "choices": ["橋", "中脳", "延髄", "視床下部", "小脳半球"], "answer": 0, "explanation": "外転神経核は橋背側に存在する。"}, {"id": "ch1-038", "chapter": "第1章 脳の解剖と機能", "question": "舌下神経核が存在する主な部位はどれか。", "choices": ["延髄", "橋", "中脳", "視床", "前頭葉"], "answer": 0, "explanation": "舌下神経核は延髄に存在する。"}, {"id": "ch1-039", "chapter": "第1章 脳の解剖と機能", "question": "核間性眼筋麻痺（INO）で障害される代表的経路はどれか。", "choices": ["内側縦束", "錐体路", "外側毛帯", "脳弓", "視放線"], "answer": 0, "explanation": "INOはMLF（内側縦束）障害で起こる。患側眼の内転障害と反対眼の外転時眼振が典型。"}, {"id": "ch1-040", "chapter": "第1章 脳の解剖と機能", "question": "Weber症候群でみられる組み合わせとして典型的なのはどれか。", "choices": ["同側動眼神経麻痺＋対側片麻痺", "同側顔面神経麻痺＋対側温痛覚障害", "同側舌下神経麻痺＋対側片麻痺", "同側小脳失調＋Horner症候群", "両側外転神経麻痺のみ"], "answer": 0, "explanation": "Weber症候群は中脳脚部病変で同側III麻痺と対側錐体路徴候を来す。"}, {"id": "ch1-041", "chapter": "第1章 脳の解剖と機能", "question": "Wallenberg症候群で障害されやすい部位はどれか。", "choices": ["延髄外側", "延髄内側", "橋底部", "中脳腹側", "視床前核"], "answer": 0, "explanation": "Wallenberg症候群は延髄外側症候群。PICAまたは椎骨動脈病変で起こる。"}, {"id": "ch1-042", "chapter": "第1章 脳の解剖と機能", "question": "延髄内側症候群でみられやすい組み合わせはどれか。", "choices": ["同側舌下神経麻痺・対側片麻痺・対側深部感覚障害", "同側顔面温痛覚障害・対側体幹温痛覚障害・嚥下障害", "動眼神経麻痺・対側片麻痺", "両耳側半盲・内分泌異常", "失語・失行・失認"], "answer": 0, "explanation": "延髄内側では錐体路、内側毛帯、舌下神経線維が障害される。"}, {"id": "ch1-043", "chapter": "第1章 脳の解剖と機能", "question": "橋底部梗塞で障害されやすい主要線維はどれか。", "choices": ["皮質脊髄路", "嗅索", "脳弓", "視放線", "後索核のみ"], "answer": 0, "explanation": "橋底部には皮質脊髄路が走行し、障害で片麻痺を来しうる。"}, {"id": "ch1-044", "chapter": "第1章 脳の解剖と機能", "question": "小脳半球病変でみられやすい神経症候はどれか。", "choices": ["同側四肢運動失調", "対側痙性麻痺のみ", "感覚性失語", "尿失禁のみ", "同名半盲のみ"], "answer": 0, "explanation": "小脳半球病変では同側四肢運動失調、測定障害、企図振戦が出やすい。"}, {"id": "ch1-045", "chapter": "第1章 脳の解剖と機能", "question": "小脳虫部障害で比較的目立つのはどれか。", "choices": ["体幹失調", "純粋感覚障害", "失語", "同名半盲", "顔面感覚脱失のみ"], "answer": 0, "explanation": "小脳虫部は体幹・歩行の協調に関与し、体幹失調や歩行失調が目立つ。"}, {"id": "ch1-046", "chapter": "第1章 脳の解剖と機能", "question": "歯状核からの出力が主に向かう経路として重要なのはどれか。", "choices": ["上小脳脚", "中小脳脚", "下小脳脚", "脳弓", "嗅索"], "answer": 0, "explanation": "小脳核からの主要出力は上小脳脚を通り、対側赤核・視床へ向かう。"}, {"id": "ch1-047", "chapter": "第1章 脳の解剖と機能", "question": "中小脳脚に主に含まれる線維はどれか。", "choices": ["橋小脳線維", "脊髄小脳路のみ", "小脳核からの遠心路のみ", "視放線", "錐体路"], "answer": 0, "explanation": "中小脳脚は主に橋核から小脳へ向かう橋小脳線維を含む。"}, {"id": "ch1-048", "chapter": "第1章 脳の解剖と機能", "question": "中大脳動脈下行枝（inferior division）領域の障害で関連が深い症候はどれか。", "choices": ["Broca失語", "Wernicke失語", "対側下肢優位麻痺", "垂直性眼球運動障害", "Horner症候群"], "answer": 1, "explanation": "MCA inferior divisionは優位半球ではWernicke失語と関連しやすい。"}, {"id": "ch1-049", "chapter": "第1章 脳の解剖と機能", "question": "中大脳動脈上行枝（superior division）優位半球病変で関連が深い症候はどれか。", "choices": ["Broca失語", "Wernicke失語", "対側上四分盲のみ", "健忘", "純粋失読"], "answer": 0, "explanation": "MCA superior divisionは前頭葉外側部を灌流し、優位半球ではBroca失語と関連する。"}, {"id": "ch1-050", "chapter": "第1章 脳の解剖と機能", "question": "後大脳動脈領域梗塞で典型的な症候はどれか。", "choices": ["同名半盲", "下肢優位麻痺", "顔面・上肢優位麻痺", "嗄声のみ", "純粋運動性片麻痺のみ"], "answer": 0, "explanation": "PCAは後頭葉内側面を灌流し、同名半盲を来しやすい。"}, {"id": "ch1-051", "chapter": "第1章 脳の解剖と機能", "question": "Heubner反回動脈が主に灌流する領域として重要なのはどれか。", "choices": ["尾状核頭部・内包前脚周辺", "後頭葉鳥距溝", "小脳虫部", "延髄外側", "側頭葉下面"], "answer": 0, "explanation": "Heubner反回動脈はACA系の穿通枝で尾状核頭部、被殻前部、内包前脚周辺などを灌流する。"}, {"id": "ch1-052", "chapter": "第1章 脳の解剖と機能", "question": "レンズ核線条体動脈が主に分岐する血管はどれか。", "choices": ["中大脳動脈M1部", "前大脳動脈A2部", "後大脳動脈P3部", "上小脳動脈", "後下小脳動脈"], "answer": 0, "explanation": "レンズ核線条体動脈は主にMCA M1部から分岐し、被殻、淡蒼球、内包などを灌流する。"}, {"id": "ch1-053", "chapter": "第1章 脳の解剖と機能", "question": "前脈絡叢動脈の灌流領域として重要なのはどれか。", "choices": ["内包後脚後部・視索・外側膝状体など", "前頭葉内側面のみ", "小脳半球下面のみ", "延髄外側のみ", "橋被蓋のみ"], "answer": 0, "explanation": "前脈絡叢動脈は内包後脚後部、視索、外側膝状体、海馬の一部などを灌流する。"}, {"id": "ch1-054", "chapter": "第1章 脳の解剖と機能", "question": "PICA閉塞で障害されやすい部位として適切なのはどれか。", "choices": ["延髄外側・小脳下面", "中脳腹側", "内包後脚", "前頭葉内側面", "後頭葉鳥距溝"], "answer": 0, "explanation": "PICAは延髄外側や小脳下面を灌流し、Wallenberg症候群と関係が深い。"}, {"id": "ch1-055", "chapter": "第1章 脳の解剖と機能", "question": "AICA梗塞で比較的みられやすい症候はどれか。", "choices": ["顔面神経麻痺・難聴を伴う橋外側症候", "下肢優位麻痺のみ", "両耳側半盲", "純粋失読", "失算のみ"], "answer": 0, "explanation": "AICA領域では橋外側、小脳、内耳動脈関連で顔面神経麻痺や難聴を伴うことがある。"}, {"id": "ch1-056", "chapter": "第1章 脳の解剖と機能", "question": "SCA梗塞で比較的関連が深い症候はどれか。", "choices": ["小脳失調", "下肢優位片麻痺", "Wernicke失語", "両耳側半盲", "嗅覚脱失"], "answer": 0, "explanation": "SCAは小脳上部などを灌流し、小脳失調と関連する。"}, {"id": "ch1-057", "chapter": "第1章 脳の解剖と機能", "question": "髄液を主に産生する構造はどれか。", "choices": ["脈絡叢", "松果体", "下垂体後葉", "黒質", "扁桃体"], "answer": 0, "explanation": "髄液は主に脳室内の脈絡叢で産生される。"}, {"id": "ch1-058", "chapter": "第1章 脳の解剖と機能", "question": "側脳室から第三脳室へ髄液が流れる通路はどれか。", "choices": ["Monro孔", "中脳水道", "Magendie孔", "Luschka孔", "大孔"], "answer": 0, "explanation": "側脳室から第三脳室へはMonro孔を通る。"}, {"id": "ch1-059", "chapter": "第1章 脳の解剖と機能", "question": "第三脳室から第四脳室へ髄液が流れる通路はどれか。", "choices": ["中脳水道", "Monro孔", "Luschka孔", "Magendie孔", "上矢状洞"], "answer": 0, "explanation": "第三脳室から第四脳室へは中脳水道を通る。"}, {"id": "ch1-060", "chapter": "第1章 脳の解剖と機能", "question": "第四脳室から正中孔として髄液が流出する孔はどれか。", "choices": ["Magendie孔", "Luschka孔", "Monro孔", "卵円孔", "棘孔"], "answer": 0, "explanation": "第四脳室正中孔はMagendie孔、外側孔はLuschka孔。"}, {"id": "ch1-061", "chapter": "第1章 脳の解剖と機能", "question": "髄液の主な吸収部位はどれか。", "choices": ["くも膜顆粒", "脈絡叢", "下垂体", "松果体", "海馬"], "answer": 0, "explanation": "髄液は主にくも膜顆粒を介して静脈洞へ吸収される。"}, {"id": "ch1-062", "chapter": "第1章 脳の解剖と機能", "question": "顔面神経核は主にどこに存在するか。", "choices": ["橋", "中脳", "延髄", "視床", "大脳脚"], "answer": 0, "explanation": "顔面神経核は橋に存在する。"}, {"id": "ch1-063", "chapter": "第1章 脳の解剖と機能", "question": "迷走神経と舌咽神経に関係する嚥下・発声の核として重要なのはどれか。", "choices": ["疑核", "赤核", "歯状核", "外側膝状体", "尾状核"], "answer": 0, "explanation": "疑核はIX、X、XIに関係し、嚥下・発声と関連する。延髄外側症候群で重要。"}, {"id": "ch1-064", "chapter": "第1章 脳の解剖と機能", "question": "三叉神経脊髄路核の障害でみられやすいのはどれか。", "choices": ["同側顔面の温痛覚障害", "対側下肢麻痺", "両耳側半盲", "純粋失読", "対側上肢深部感覚障害のみ"], "answer": 0, "explanation": "三叉神経脊髄路核・路は顔面の温痛覚に関与する。"}, {"id": "ch1-065", "chapter": "第1章 脳の解剖と機能", "question": "交感神経下行路障害で生じる症候として適切なのはどれか。", "choices": ["Horner症候群", "Weber症候群", "Gerstmann症候群", "Balint症候群", "Kluver-Bucy症候群"], "answer": 0, "explanation": "交感神経下行路の障害で縮瞳、眼瞼下垂、発汗低下などのHorner症候群を来す。"}, {"id": "ch1-066", "chapter": "第1章 脳の解剖と機能", "question": "赤核が存在する主な部位はどこか。", "choices": ["中脳", "橋", "延髄", "視床", "前頭葉"], "answer": 0, "explanation": "赤核は中脳被蓋に存在し、小脳出力などと関係する。"}, {"id": "ch1-067", "chapter": "第1章 脳の解剖と機能", "question": "脳梁障害で生じうる症候として適切なのはどれか。", "choices": ["左右半球間の離断症候", "末梢性顔面神経麻痺のみ", "片眼失明のみ", "同側小脳失調のみ", "嚥下障害のみ"], "answer": 0, "explanation": "脳梁は左右大脳半球を連絡する交連線維で、障害により離断症候を来しうる。"}, {"id": "ch1-068", "chapter": "第1章 脳の解剖と機能", "question": "純粋失読（失書を伴わない失読）に関連しやすい病変はどれか。", "choices": ["左後頭葉＋脳梁膨大部", "右小脳半球", "左中心前回", "橋底部", "延髄外側"], "answer": 0, "explanation": "左後頭葉と脳梁膨大部病変で、右視野からの情報が言語野へ届かず純粋失読を来しうる。"}, {"id": "ch1-069", "chapter": "第1章 脳の解剖と機能", "question": "Balint症候群でみられる組み合わせとして適切なのはどれか。", "choices": ["精神性注視麻痺・視覚性運動失調・同時失認", "失算・失書・手指失認・左右失認", "流暢性失語・理解障害・復唱障害", "同側眼瞼下垂・縮瞳・発汗低下", "同側舌下神経麻痺・対側片麻痺"], "answer": 0, "explanation": "Balint症候群は両側頭頂後頭葉病変で、精神性注視麻痺、視覚性運動失調、同時失認が三徴。"}, {"id": "ch1-070", "chapter": "第1章 脳の解剖と機能", "question": "Kluver-Bucy症候群に関連が深い病変部位はどれか。", "choices": ["両側側頭葉・扁桃体", "片側中心前回", "延髄内側", "視交叉", "小脳虫部"], "answer": 0, "explanation": "両側側頭葉、とくに扁桃体を含む障害で口唇傾向、過食、性行動異常、情動変化などがみられる。"}, {"id": "ch1-071", "chapter": "第1章 脳の解剖と機能", "question": "島皮質と関連が深い機能として比較的適切なのはどれか。", "choices": ["自律神経・内臓感覚・味覚などの統合", "一次視覚のみ", "下肢運動のみ", "髄液吸収のみ", "聴覚中継のみ"], "answer": 0, "explanation": "島皮質は自律神経、内臓感覚、味覚、情動など多様な統合機能に関与する。"}, {"id": "ch1-072", "chapter": "第1章 脳の解剖と機能", "question": "前頭眼野の障害急性期にみられやすい眼球偏倚はどれか。", "choices": ["病巣側への共同偏倚", "病巣反対側への共同偏倚", "上下方向のみの偏倚", "輻輳固定", "眼球運動は保たれる"], "answer": 0, "explanation": "前頭眼野は対側への共同注視に関与し、破壊性病変では病巣側を向く。"}, {"id": "ch1-073", "chapter": "第1章 脳の解剖と機能", "question": "破壊性の橋病変で共同偏倚が出る場合、眼球は一般にどちらを向きやすいか。", "choices": ["病巣と反対側", "病巣側", "上方のみ", "下方のみ", "偏倚しない"], "answer": 0, "explanation": "大脳前頭眼野病変では病巣側、橋傍正中網様体病変では病巣反対側を向くと整理する。"}, {"id": "ch1-074", "chapter": "第1章 脳の解剖と機能", "question": "皮質延髄路の両側性支配が比較的乏しく、中枢性障害で対側下部顔面麻痺が目立つのはどれか。", "choices": ["顔面神経核下半部支配", "顔面神経核上半部支配", "動眼神経核支配", "迷走神経背側核支配", "Edinger-Westphal核支配"], "answer": 0, "explanation": "上部顔面は両側支配が強いが、下部顔面は対側皮質からの支配が目立つため中枢性顔面麻痺で口角下垂が出る。"}, {"id": "ch1-075", "chapter": "第1章 脳の解剖と機能", "question": "脳幹網様体賦活系の障害で最も問題となる症候はどれか。", "choices": ["意識障害", "失算", "同名半盲", "片側上四分盲", "嗅覚低下のみ"], "answer": 0, "explanation": "上行性網様体賦活系は覚醒・意識維持に重要。障害で意識障害を来す。"}, {"id": "ch1-076", "chapter": "第1章 脳の解剖と機能", "question": "視床下部の機能として適切なのはどれか。", "choices": ["自律神経・内分泌・体温調節", "一次運動", "視覚中継のみ", "聴覚中継のみ", "四肢協調運動のみ"], "answer": 0, "explanation": "視床下部は自律神経、内分泌、体温、摂食、概日リズムなどの調節に関与する。"}, {"id": "ch1-077", "chapter": "第1章 脳の解剖と機能", "question": "松果体部病変でみられうる眼球運動障害として有名なのはどれか。", "choices": ["Parinaud症候群", "Wallenberg症候群", "Weber症候群", "Gerstmann症候群", "Balint症候群"], "answer": 0, "explanation": "松果体部腫瘍などによる中脳蓋部圧迫で上方注視障害などのParinaud症候群を来す。"}, {"id": "ch1-078", "chapter": "第1章 脳の解剖と機能", "question": "脳弓の主な役割として適切なのはどれか。", "choices": ["海馬から乳頭体への連絡", "一次運動野から脊髄への下降路", "視覚情報の伝導", "聴覚情報の中継", "小脳から橋核への入力"], "answer": 0, "explanation": "脳弓は海馬から乳頭体などへ向かう線維束で、Papez回路に含まれる。"}, {"id": "ch1-079", "chapter": "第1章 脳の解剖と機能", "question": "弓状束の障害で最も関連が深い失語はどれか。", "choices": ["伝導失語", "全失語", "純粋語聾", "超皮質性感覚失語", "皮質下性失語のみ"], "answer": 0, "explanation": "弓状束はBroca野とWernicke野の連絡に関与し、障害で伝導失語が生じやすい。"}, {"id": "ch1-080", "chapter": "第1章 脳の解剖と機能", "question": "第1章の総合問題：右延髄外側病変で最も説明しやすい所見はどれか。", "choices": ["右顔面温痛覚障害と左体幹四肢温痛覚障害", "右下肢優位麻痺のみ", "左Broca失語", "両耳側半盲", "左同名半盲のみ"], "answer": 0, "explanation": "延髄外側症候群では同側顔面温痛覚障害、対側体幹四肢温痛覚障害、嚥下障害、Horner、小脳失調などを来す。"}];
+
+let mode = "all";
+let order = QUESTIONS.map((_, i) => i);
+let pos = 0;
+let selected = null;
+let answered = false;
+const stateKey = "stroke_exam_drill_ch1_full_v1";
+let state = JSON.parse(localStorage.getItem(stateKey) || '{"answered":{},"wrongIds":[],"flagIds":[]}');
+
+const els = {
+  doneCount: document.getElementById("doneCount"),
+  wrongCount: document.getElementById("wrongCount"),
+  flagCount: document.getElementById("flagCount"),
+  accuracy: document.getElementById("accuracy"),
+  progressText: document.getElementById("progressText"),
+  qidBadge: document.getElementById("qidBadge"),
+  questionText: document.getElementById("questionText"),
+  choices: document.getElementById("choices"),
+  submitBtn: document.getElementById("submitBtn"),
+  nextBtn: document.getElementById("nextBtn"),
+  flagBtn: document.getElementById("flagBtn"),
+  resultBox: document.getElementById("resultBox"),
+  modeAll: document.getElementById("modeAll"),
+  modeWrong: document.getElementById("modeWrong"),
+  modeFlag: document.getElementById("modeFlag"),
+  modeRandom: document.getElementById("modeRandom"),
+  resetBtn: document.getElementById("resetBtn"),
+  jumpBox: document.getElementById("jumpBox"),
+  jumpBtn: document.getElementById("jumpBtn"),
+};
+
+function save() {
+  localStorage.setItem(stateKey, JSON.stringify(state));
+  updateStats();
+}
+
+function updateStats() {
+  const records = Object.values(state.answered);
+  const done = records.length;
+  const correct = records.filter(r => r.correct).length;
+  els.doneCount.textContent = done;
+  els.wrongCount.textContent = state.wrongIds.length;
+  els.flagCount.textContent = state.flagIds.length;
+  els.accuracy.textContent = done ? Math.round(correct / done * 100) + "%" : "-";
+}
+
+function setActiveButton() {
+  document.querySelectorAll(".toolbar button").forEach(b => b.classList.remove("active"));
+  if (mode === "all") els.modeAll.classList.add("active");
+  if (mode === "wrong") els.modeWrong.classList.add("active");
+  if (mode === "flag") els.modeFlag.classList.add("active");
+  if (mode === "random") els.modeRandom.classList.add("active");
+}
+
+function setMode(nextMode) {
+  mode = nextMode;
+  pos = 0;
+  selected = null;
+  answered = false;
+  if (mode === "all") order = QUESTIONS.map((_, i) => i);
+  else if (mode === "wrong") order = QUESTIONS.map((q, i) => state.wrongIds.includes(q.id) ? i : -1).filter(i => i >= 0);
+  else if (mode === "flag") order = QUESTIONS.map((q, i) => state.flagIds.includes(q.id) ? i : -1).filter(i => i >= 0);
+  else order = QUESTIONS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 10);
+  setActiveButton();
+  render();
+}
+
+function render() {
+  updateStats();
+  els.resultBox.className = "result hidden";
+  els.resultBox.innerHTML = "";
+  els.nextBtn.disabled = true;
+  els.submitBtn.disabled = false;
+  selected = null;
+  answered = false;
+
+  if (order.length === 0) {
+    els.progressText.textContent = "";
+    els.qidBadge.textContent = "";
+    els.questionText.textContent = mode === "wrong" ? "間違い集は空です。いまのところ優秀。" : mode === "flag" ? "要復習は空です。" : "問題がありません。";
+    els.choices.innerHTML = "";
+    els.submitBtn.disabled = true;
+    return;
+  }
+
+  if (pos >= order.length) {
+    els.progressText.textContent = "";
+    els.qidBadge.textContent = "";
+    els.questionText.textContent = "このセットは終了です。";
+    els.choices.innerHTML = '<p class="subtitle">別モードを押すと再開できます。</p>';
+    els.submitBtn.disabled = true;
+    return;
+  }
+
+  const q = QUESTIONS[order[pos]];
+  els.progressText.textContent = `${pos + 1} / ${order.length}`;
+  els.qidBadge.textContent = q.id.replace("ch1-", "No.");
+  els.questionText.textContent = q.question;
+  els.flagBtn.textContent = state.flagIds.includes(q.id) ? "要復習から外す" : "要復習に入れる";
+  els.choices.innerHTML = "";
+
+  q.choices.forEach((choice, idx) => {
+    const label = document.createElement("label");
+    label.className = "choice";
+    label.innerHTML = `<input type="radio" name="choice" value="${idx}"><strong>${String.fromCharCode(65+idx)}.</strong><span>${choice}</span>`;
+    label.addEventListener("click", () => {
+      if (answered) return;
+      selected = idx;
+      document.querySelectorAll(".choice").forEach(c => c.classList.remove("selected"));
+      label.classList.add("selected");
+      label.querySelector("input").checked = true;
+    });
+    els.choices.appendChild(label);
+  });
+}
+
+function submit() {
+  if (selected === null || answered) return;
+  const q = QUESTIONS[order[pos]];
+  answered = true;
+  const correct = selected === q.answer;
+  state.answered[q.id] = { correct, selected, at: new Date().toISOString() };
+  if (!correct && !state.wrongIds.includes(q.id)) state.wrongIds.push(q.id);
+  if (correct) state.wrongIds = state.wrongIds.filter(id => id !== q.id);
+  save();
+
+  els.resultBox.className = "result " + (correct ? "right" : "wrong");
+  els.resultBox.innerHTML = `
+    <strong>${correct ? "正解！" : "不正解"}</strong><br>
+    あなたの回答：${String.fromCharCode(65 + selected)}. ${q.choices[selected]}<br>
+    正解：${String.fromCharCode(65 + q.answer)}. ${q.choices[q.answer]}<br>
+    <hr>
+    <strong>解説</strong><br>${q.explanation}
+  `;
+  els.submitBtn.disabled = true;
+  els.nextBtn.disabled = false;
+}
+
+function next() { pos++; render(); }
+
+function toggleFlag() {
+  if (order.length === 0 || pos >= order.length) return;
+  const q = QUESTIONS[order[pos]];
+  if (state.flagIds.includes(q.id)) state.flagIds = state.flagIds.filter(id => id !== q.id);
+  else state.flagIds.push(q.id);
+  save();
+  render();
+}
+
+els.submitBtn.addEventListener("click", submit);
+els.nextBtn.addEventListener("click", next);
+els.flagBtn.addEventListener("click", toggleFlag);
+els.modeAll.addEventListener("click", () => setMode("all"));
+els.modeWrong.addEventListener("click", () => setMode("wrong"));
+els.modeFlag.addEventListener("click", () => setMode("flag"));
+els.modeRandom.addEventListener("click", () => setMode("random"));
+els.jumpBtn.addEventListener("click", () => {
+  const n = Number(els.jumpBox.value);
+  if (!n || n < 1 || n > QUESTIONS.length) return;
+  mode = "all";
+  order = QUESTIONS.map((_, i) => i);
+  pos = n - 1;
+  setActiveButton();
+  render();
+});
+els.resetBtn.addEventListener("click", () => {
+  if (!confirm("回答記録・間違い集・要復習をリセットしますか？")) return;
+  state = {"answered":{},"wrongIds":[],"flagIds":[]};
+  save();
+  setMode(mode);
+});
+render();
+</script>
+</body>
+</html>
