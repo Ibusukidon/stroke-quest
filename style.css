@@ -395,3 +395,74 @@ pre{
     width:100%;
   }
 }
+
+
+/* v9.1 hard fix: force quiz choices to be left-aligned on desktop and mobile */
+#choices.choices{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:12px !important;
+  width:100% !important;
+}
+
+#choices .choice{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:14px !important;
+  width:100% !important;
+  min-height:64px !important;
+  padding:14px 18px !important;
+  text-align:left !important;
+}
+
+#choices .choice input[type="radio"]{
+  flex:0 0 22px !important;
+  width:18px !important;
+  height:18px !important;
+  margin:0 !important;
+  transform:none !important;
+  justify-self:auto !important;
+}
+
+#choices .choice strong{
+  flex:0 0 34px !important;
+  width:34px !important;
+  min-width:34px !important;
+  text-align:left !important;
+  justify-self:auto !important;
+  font-weight:900 !important;
+}
+
+#choices .choice span{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  text-align:left !important;
+  justify-self:auto !important;
+  line-height:1.65 !important;
+  word-break:normal !important;
+  overflow-wrap:anywhere !important;
+}
+
+@media(min-width:900px){
+  #choices .choice{
+    max-width:100% !important;
+  }
+  #choices .choice span{
+    font-size:17px !important;
+  }
+}
+
+@media(max-width:720px){
+  #choices .choice{
+    gap:10px !important;
+    padding:12px 14px !important;
+  }
+  #choices .choice strong{
+    flex-basis:30px !important;
+    width:30px !important;
+    min-width:30px !important;
+  }
+}
