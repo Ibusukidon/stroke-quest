@@ -70,36 +70,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .badge{background:var(--accent2);color:var(--accent);font-weight:900;padding:6px 10px;border-radius:999px;font-size:13px}
 .badge.gray{background:#f3f4f6;color:#374151}
 h2{font-size:24px;line-height:1.55;margin:10px 0 20px}
-.choices{
-display:flex;
-flex-direction:column;
-gap:10px;
-}
+.choices{display:grid;gap:10px}
 .choice{
-display:flex;
-align-items:center;
-gap:16px;
-border:1px solid var(--line);
-border-radius:16px;
-padding:14px;
-cursor:pointer;
-background:#fff;
+  display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);
+  border-radius:16px;padding:14px;cursor:pointer;background:#fff
 }
-
-.choice input{
-flex:0 0 auto;
-margin:0;
-transform:scale(1.2);
-}
-
-.choice strong{
-width:32px;
-flex:0 0 32px;
-}
-
-.choice span{
-flex:1;
-}
+.choice:hover{background:#f8fafc}
+.choice input{margin-top:4px;transform:scale(1.2)}
 .choice.selected{border-color:var(--accent);background:#eff6ff}
 .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
 .result{margin-top:20px;border-radius:18px;padding:18px;border:1px solid var(--line);background:#f9fafb;line-height:1.75}
@@ -171,37 +148,3 @@ button.mini{
 .review-plan{
   margin-top:12px;border-top:1px solid var(--line);padding-top:12px;color:var(--muted);font-size:14px;line-height:1.6
 }
-.choice{
-justify-content:flex-start;
-text-align:left;
-}
-
-.choiceText{
-display:flex;
-gap:12px;
-align-items:flex-start;
-}
-.choice{
-display:grid !important;
-grid-template-columns:32px 1fr !important;
-align-items:center !important;
-}
-
-.choice input{
-grid-column:1 !important;
-justify-self:start !important;
-}
-
-.choiceText{
-grid-column:2 !important;
-display:block !important;
-text-align:left !important;
-}
-
-.choiceText strong{
-display:inline-block !important;
-width:32px !important;
-}
-body{
-outline:10px solid red !important;
-} 
